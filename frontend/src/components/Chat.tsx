@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Terminal, CheckCircle2, ChevronDown, ChevronUp, Sparkles, Award, Mic, Square } from 'lucide-react';
+import { Send, Loader2, Terminal, CheckCircle2, ChevronDown, ChevronUp, Sparkles, Award, Mic, Square, ImagePlus, X } from 'lucide-react';
 import { streamMomo } from '../api';
 import { useAuthStore } from '../store/authStore';
 import useVoice from '../hooks/useVoice';
@@ -54,8 +54,10 @@ const ToolCallCard: React.FC<{ tool: ToolCall }> = ({ tool }) => {
   );
 };
 
-export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string) => void, status: string | null, momoState: string, xpUpdate: any, unlockedAchievements: string[] }> = ({ messages, onSendMessage, status, momoState, xpUpdate, unlockedAchievements }) => {
+export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string, imageData?: string) => void, status: string | null, momoState: string, xpUpdate: any, unlockedAchievements: string[] }> = ({ messages, onSendMessage, status, momoState, xpUpdate, unlockedAchievements }) => {
   const [input, setInput] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
@@ -66,11 +68,23 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, status, xpUpdate, unlockedAchievements]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage((reader.result as string).split(',')[1]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    onSendMessage(input);
+    if (!input.trim() && !selectedImage) return;
+    onSendMessage(input, selectedImage || undefined);
     setInput('');
+    setSelectedImage(null);
   };
 
   return (
@@ -81,10 +95,9 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
             <div className="mb-10 w-full flex justify-center">
               <BriefingCard />
             </div>
-
             <h2 className="text-5xl font-bold mb-4 text-[var(--foreground)] tracking-tight">Hello, {user?.name || 'Louis'}</h2>
             <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto">
-              Momo is ready. Use the mic or type below to begin.
+              Momo is ready. Analyze images, manage SOPs, or speak your mind.
             </p>
           </div>
         )}
@@ -116,11 +129,7 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
           {(status || voiceState !== 'idle') && (
             <div className="flex items-center gap-4 text-sm text-gray-500 ml-12 animate-pulse">
               <Loader2 size={16} className="animate-spin text-[var(--accent)]" />
-              <span className="font-bold tracking-tight uppercase text-[10px] tracking-widest">
-                {voiceState === 'listening' ? 'Momo is listening...' : 
-                 voiceState === 'speaking' ? 'Momo is speaking...' : 
-                 status || 'Momo is processing...'}
-              </span>
+              <span className="font-bold tracking-tight uppercase text-[10px] tracking-widest">{status || 'Momo is processing...'}</span>
             </div>
           )}
 
@@ -129,55 +138,69 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
               <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-1.5 rounded-full w-fit mr-2 animate-bounce shadow-sm">
                 <Sparkles size={12} />
                 <span>+{xpUpdate.amount} XP earned</span>
-                {xpUpdate.leveledUp && <span className="ml-1 border-l border-[var(--accent)]/30 pl-2 text-yellow-600 dark:text-yellow-400 uppercase tracking-tighter">Level Up! (Lvl {xpUpdate.level})</span>}
               </div>
             )}
-
-            {unlockedAchievements.map((ach, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs font-bold text-yellow-600 bg-yellow-500/10 px-3 py-1.5 rounded-full w-fit mr-2 animate-pulse shadow-sm border border-yellow-500/20">
-                <Award size={12} />
-                <span>ACHIEVEMENT UNLOCKED: {ach}</span>
-              </div>
-            ))}
           </div>
         </div>
         <div ref={scrollRef} />
       </div>
 
       <div className="p-6">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative group flex items-center gap-3">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={voiceState === 'listening' ? "Listening..." : "Ask Momo anything..."}
-              className="w-full bg-[var(--input-bg)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl py-5 pl-6 pr-14 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all placeholder:text-gray-500 shadow-sm font-sans"
-              disabled={voiceState !== 'idle'}
-            />
-            <button 
-              type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-[var(--accent)] text-[var(--accent-foreground)] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-30 shadow-sm"
-              disabled={!input.trim() || voiceState !== 'idle'}
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
+          {selectedImage && (
+            <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-[var(--accent)] shadow-lg animate-in zoom-in-95 duration-200">
+              <img src={`data:image/png;base64,${selectedImage}`} alt="Preview" className="w-full h-full object-cover" />
+              <button 
+                type="button" 
+                onClick={() => setSelectedImage(null)}
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+
+          <div className="relative group flex items-center gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask Momo anything..."
+                className="w-full bg-[var(--input-bg)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl py-5 pl-14 pr-14 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all placeholder:text-gray-500 shadow-sm font-sans"
+                disabled={voiceState !== 'idle'}
+              />
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-[var(--accent)] transition-colors"
+              >
+                <ImagePlus size={20} />
+              </button>
+              <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
+              
+              <button 
+                type="submit"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-[var(--accent)] text-[var(--accent-foreground)] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-30 shadow-sm"
+                disabled={(!input.trim() && !selectedImage) || voiceState !== 'idle'}
+              >
+                <Send size={22} />
+              </button>
+            </div>
+            
+            <button
+              type="button"
+              onClick={voiceState === 'idle' ? startVoice : stopVoice}
+              className={`p-4 rounded-2xl border transition-all shadow-sm ${
+                voiceState === 'listening' ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--sidebar)] hover:border-[var(--accent)]'
+              }`}
             >
-              <Send size={22} />
+              {voiceState === 'idle' ? <Mic size={24} /> : <Square size={24} />}
             </button>
           </div>
-          
-          <button
-            type="button"
-            onClick={voiceState === 'idle' ? startVoice : stopVoice}
-            className={`p-4 rounded-2xl border transition-all shadow-sm ${
-              voiceState === 'listening' 
-                ? 'bg-red-500 text-white border-red-600 animate-pulse' 
-                : 'bg-[var(--sidebar)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--accent)]'
-            }`}
-          >
-            {voiceState === 'idle' ? <Mic size={24} /> : <Square size={24} />}
-          </button>
         </form>
         <p className="text-[11px] text-center mt-3 text-gray-400 font-bold uppercase tracking-widest opacity-50">
-          Momo v1.7.1 • Port 9000 • Tier 3 Routing
+          Momo v1.9.0 • Multi-Modal Vision Enabled • Tier 3 Neural Engine
         </p>
       </div>
     </div>

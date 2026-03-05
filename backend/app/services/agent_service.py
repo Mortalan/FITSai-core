@@ -17,6 +17,7 @@ from app.services.ghl_service import ghl_service
 from app.services.glpi_service import glpi_service
 from app.services.router_service import router_service, AITier
 from app.services.system_monitor_service import system_monitor
+from app.services.memory_service import memory_service
 from app.models.user import User
 
 # --- Momo's Core Toolset ---
@@ -65,17 +66,19 @@ async def glpi_asset_search(query: str) -> str:
 
 @tool
 def system_report() -> str:
-    """Generates a comprehensive report of Momo's current system health (CPU, RAM, GPU, Disk, Services)."""
+    """Generates a comprehensive report of Momo's current system health."""
     return system_monitor.get_system_report()
 
 tools = [file_write, file_read, doc_create, ghl_contact_lookup, glpi_asset_search, system_report]
 tool_node = ToolNode(tools)
 
-# --- Momo's Brain (LangGraph) ---
+# --- Momo's Brain ---
 
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
     tier: AITier
+    user_id: int
+    memories: List[str]
 
 def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
     last_message = state["messages"][-1]
@@ -84,20 +87,30 @@ def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
     return "tools"
 
 async def call_momo(state: AgentState):
+    # 1. Fetch relevant memories if not already present
+    memories = state.get("memories", [])
+    if not memories and state.get("user_id"):
+        user_query = state["messages"][-1].content
+        if isinstance(user_query, str):
+            memories = await memory_service.search_memories(state["user_id"], user_query)
+
     model_name = "gpt-4o-mini" if state.get("tier") == AITier.TIER2 else "gpt-4o"
     model = ChatOpenAI(model=model_name, streaming=True, api_key=settings.OPENAI_API_KEY)
     model_with_tools = model.bind_tools(tools)
     
-    system_prompt = """You are Momo, an autonomous agentic ecosystem. 
-    You have access to tools. When a user asks for a technical task, 
-    DO NOT just explain it. USE YOUR TOOLS. 
-    State your plan briefly, then execute.
+    memory_context = "\n".join([f"- {m}" for m in memories]) if memories else "None"
     
-    You can check your own system health using the system_report tool.
-    """
+    system_prompt = f"""You are Momo, an autonomous agentic ecosystem. 
+    You have access to tools. When a user asks for a technical task, DO NOT just explain it. USE YOUR TOOLS.
+    
+    [Long-term Memory Context]:
+    {memory_context}
+    
+    Stay in character and leverage your memories to provide personalized assistance."""
+    
     messages = [SystemMessage(content=system_prompt)] + state["messages"]
     response = await model_with_tools.ainvoke(messages)
-    return {"messages": [response]}
+    return {"messages": [response], "memories": memories}
 
 workflow = StateGraph(AgentState)
 workflow.add_node("momo", call_momo)

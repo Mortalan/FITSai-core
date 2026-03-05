@@ -1,18 +1,21 @@
 import json
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional, List
 import logging
 
+from app.services.openai_service import openai_service
 from app.services.agent_service import momo_engine
 from app.services.gamification_service import gamification_service
 from app.services.achievement_service import achievement_service
 from app.services.router_service import router_service, AITier
 from app.services.conversation_service import conversation_service
 from app.services.budget_service import budget_service
+from app.services.memory_service import memory_service
+from app.services.memory_extraction import memory_extractor
 from app.api.v1.auth import get_current_user
 from app.core.database import get_db, AsyncSessionLocal
 from app.models.user import User
@@ -43,32 +46,36 @@ async def get_history(
         raise HTTPException(status_code=404, detail="Conversation not found")
     return conv
 
+async def extract_and_store_memory(user_id: int, question: str, answer: str):
+    """Background task to extract and store new facts."""
+    facts = await memory_extractor.extract_facts(question, answer)
+    for fact in facts:
+        await memory_service.store_memory(user_id, fact)
+
 @router.post("/stream")
 async def stream_momo(
-    request: Request, 
+    request: Request,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user)
 ):
     body = await request.json()
     question = body.get("question")
     conv_id = body.get("conversation_id")
+    image_data = body.get("image_data")
+    image_mime = body.get("image_mime", "image/png")
     
-    # 1. Budget Check
     async with AsyncSessionLocal() as db:
         if not await budget_service.check_budget(db, current_user.department_id):
-            raise HTTPException(status_code=402, detail="Department budget exceeded for this month.")
+            raise HTTPException(status_code=402, detail="Department budget exceeded.")
 
-    # 2. Classify Query
-    tier = router_service.classify(question)
-    logger.info(f"Routing query to {tier}")
+    tier = AITier.TIER3 if image_data else router_service.classify(question)
 
     async def event_generator():
         tool_count = 0
         full_assistant_answer = ""
         tokens_input = 0
         tokens_output = 0
-        model_used = "gpt-4o" if tier == AITier.TIER3 else "gpt-4o-mini"
         
-        # Create or Get Conversation
         async with AsyncSessionLocal() as db:
             if not conv_id:
                 conversation = await conversation_service.create_conversation(db, current_user.id, title=question[:40])
@@ -92,53 +99,52 @@ async def stream_momo(
                 if m['role'] == 'user': lc_messages.append(HumanMessage(content=m['content']))
                 elif m['role'] == 'assistant': lc_messages.append(AIMessage(content=m['content']))
 
-        initial_state = {"messages": lc_messages, "tier": tier}
+        initial_state = {
+            "messages": lc_messages, 
+            "tier": tier,
+            "user_id": current_user.id
+        }
         
+        if image_data:
+            initial_state["messages"][-1] = HumanMessage(content=[
+                {"type": "text", "text": question},
+                {"type": "image_url", "image_url": {"url": f"data:{image_mime};base64,{image_data}"}}
+            ])
+
         async for event in momo_engine.astream_events(initial_state, version="v2"):
             kind = event["event"]
-            
             if kind == "on_chat_model_stream":
                 content = event["data"]["chunk"].content
                 if content:
                     full_assistant_answer += content
                     yield f"event: token\ndata: {json.dumps({'content': content})}\n\n"
-            
             elif kind == "on_chat_model_end":
-                # Extract token usage
                 usage = event["data"]["output"].response_metadata.get("token_usage", {})
                 tokens_input += usage.get("prompt_tokens", 0)
                 tokens_output += usage.get("completion_tokens", 0)
-
             elif kind == "on_tool_start":
                 tool_count += 1
                 yield f"event: tool_start\ndata: {json.dumps({'name': event['name'], 'inputs': event['data'].get('input')})}\n\n"
-            
             elif kind == "on_tool_end":
                 yield f"event: tool_end\ndata: {json.dumps({'name': event['name'], 'output': str(event['data'].get('output'))})}\n\n"
 
-            elif kind == "on_chat_model_start":
-                yield f"event: status\ndata: {json.dumps({'message': 'Momo is thinking...'})}\n\n"
-
             elif kind == "on_chain_end" and event["name"] == "LangGraph":
                 async with AsyncSessionLocal() as db:
-                    # 1. Save assistant message
                     await conversation_service.add_message(db, current_conv_id, current_user.id, "assistant", full_assistant_answer)
+                    await budget_service.track_usage(db, current_user, "gpt-4o", tokens_input, tokens_output)
                     
-                    # 2. Track Budget & Usage
-                    await budget_service.track_usage(db, current_user, model_used, tokens_input, tokens_output)
-                    
-                    # 3. Award XP
-                    xp_to_award = gamification_service.XP_PER_MESSAGE + (tool_count * gamification_service.XP_PER_TOOL_USE)
                     user_result = await db.execute(select(User).where(User.id == current_user.id))
                     user = user_result.scalar_one()
-                    progress = await gamification_service.award_xp(db, user, xp_to_award)
-                    new_achievements = await achievement_service.check_achievements(db, user, "tool_use" if tool_count > 0 else "message", {})
+                    progress = await gamification_service.award_xp(db, user, 10 + (tool_count * 20))
+                    new_achievements = await achievement_service.check_achievements(db, user, "message", {})
+                    
+                    # Trigger Memory Extraction in background
+                    background_tasks.add_task(extract_and_store_memory, current_user.id, question, full_assistant_answer)
                     
                     yield f"event: done\ndata: {json.dumps({
                         'status': 'finished',
                         'xp_progress': progress,
                         'new_achievements': new_achievements,
-                        'tier': tier,
                         'conversation_id': current_conv_id
                     })}\n\n"
 

@@ -2,7 +2,7 @@ import { useAuthStore } from './store/authStore';
 
 const API_BASE_URL = 'http://10.0.0.231:9000/api/v1';
 
-export async function* streamMomo(question: string, conversationId?: number) {
+export async function* streamMomo(question: string, conversationId?: number, imageData?: string) {
   const token = useAuthStore.getState().token;
   
   const response = await fetch(`${API_BASE_URL}/chat/stream`, {
@@ -11,7 +11,11 @@ export async function* streamMomo(question: string, conversationId?: number) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify({ question, conversation_id: conversationId }),
+    body: JSON.stringify({ 
+      question, 
+      conversation_id: conversationId,
+      image_data: imageData 
+    }),
   });
 
   if (response.status === 401) {
@@ -37,10 +41,8 @@ export async function* streamMomo(question: string, conversationId?: number) {
 
     for (const line of lines) {
       if (!line.trim()) continue;
-      
       const eventMatch = line.match(/^event: (.*)/m);
       const dataMatch = line.match(/^data: (.*)/m);
-      
       if (eventMatch && dataMatch) {
         const eventType = eventMatch[1].trim();
         const data = JSON.parse(dataMatch[1].trim());
