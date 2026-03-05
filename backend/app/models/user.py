@@ -16,5 +16,7 @@ class User(Base):
     xp_total = Column(Integer, default=0)
     character_class = Column(String, default="KOBOLD")
     stats = Column(JSON, default=lambda: {"intelligence": 1, "agility": 1, "strength": 1})
+    avatar_url = Column(String, default="/assets/avfel2.png")
+    avatar_state = Column(String, default="idle")
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())

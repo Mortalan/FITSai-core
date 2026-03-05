@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from app.core.database import Base
-from app.models.user import User # Import all models here
+from app.models.user import User
+from app.models.achievement import Achievement, UserAchievement
+from app.models.document import Document, DocumentVersion # Import all models here
 from app.core.config import settings
 
 config = context.config
