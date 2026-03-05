@@ -13,9 +13,11 @@ from sqlalchemy.future import select
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.services.document_service import document_service
+from app.services.ghl_service import ghl_service
+from app.services.glpi_service import glpi_service
 from app.models.user import User
 
-# --- Momo's Core Toolset ---
+# --- Momo's Enterprise Toolset ---
 
 @tool
 def file_write(path: str, content: str) -> str:
@@ -40,24 +42,29 @@ def file_read(path: str) -> str:
 async def doc_create(title: str, content: str, category: str = "SOP") -> str:
     """Creates a new company document/SOP in the Knowledge Base."""
     async with AsyncSessionLocal() as db:
-        # For autonomous tools, we assume the first admin user for now or a system user
         result = await db.execute(select(User).limit(1))
         user = result.scalar_one()
         doc = await document_service.create_document(db, title, content, user.id, category)
         return f"Successfully created SOP '{title}' with ID {doc.id}"
 
 @tool
-async def doc_read(doc_id: int) -> str:
-    """Reads the latest content of a company document from the Knowledge Base."""
-    async with AsyncSessionLocal() as db:
-        content = await document_service.get_document_content(db, doc_id)
-        if not content: return "Document not found or empty."
-        return content
+async def ghl_contact_lookup(email: str) -> str:
+    """Searches for a contact in GoHighLevel CRM by email."""
+    contact = await ghl_service.get_contact_by_email(email)
+    if not contact: return "No contact found with that email in GHL."
+    return f"Found Contact: {contact.get('firstName')} {contact.get('lastName')} (ID: {contact.get('id')})"
 
-tools = [file_write, file_read, doc_create, doc_read]
+@tool
+async def glpi_asset_search(query: str) -> str:
+    """Searches for hardware assets in GLPI management system."""
+    assets = await glpi_service.search_assets(query)
+    if not assets: return "No assets found in GLPI matching your query."
+    return f"GLPI Results: {json.dumps(assets[:3])}"
+
+tools = [file_write, file_read, doc_create, ghl_contact_lookup, glpi_asset_search]
 tool_node = ToolNode(tools)
 
-# --- Momo's Brain (LangGraph) ---
+# --- Momo's Brain ---
 
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
@@ -73,12 +80,12 @@ async def call_momo(state: AgentState):
     model_with_tools = model.bind_tools(tools)
     
     system_prompt = """You are Momo, an autonomous agentic ecosystem. 
-    You have direct access to tools. When a user asks for a technical task, 
+    You have access to enterprise tools including GHL (GoHighLevel) and GLPI.
+    When a user asks for technical tasks, CRM lookups, or asset management, 
     DO NOT just explain it. USE YOUR TOOLS. 
-    State your plan briefly, then execute.
     
-    You can manage the company Knowledge Base using doc_create and doc_read.
-    Use these for official SOPs and guides.
+    You can also manage the Knowledge Base using doc_create.
+    State your plan briefly, then execute.
     """
     messages = [SystemMessage(content=system_prompt)] + state["messages"]
     response = await model_with_tools.ainvoke(messages)

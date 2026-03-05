@@ -52,115 +52,20 @@ const ToolCallCard: React.FC<{ tool: ToolCall }> = ({ tool }) => {
   );
 };
 
-export const Chat: React.FC = () => {
+export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string) => void, status: string | null, momoState: string, xpUpdate: any, unlockedAchievements: string[] }> = ({ messages, onSendMessage, status, momoState, xpUpdate, unlockedAchievements }) => {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [status, setStatus] = useState<string | null>(null);
-  const [momoState, setMomoState] = useState<'idle' | 'thinking' | 'speaking'>('idle');
-  const [xpUpdate, setXpUpdate] = useState<{ amount: number, level: number, leveledUp: boolean } | null>(null);
-  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  
   const user = useAuthStore((state) => state.user);
-  const updateUser = useAuthStore((state) => state.updateUser);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, status, xpUpdate, unlockedAchievements]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    onSendMessage(input);
     setInput('');
-    setStatus('Momo is thinking...');
-    setMomoState('thinking');
-    setXpUpdate(null);
-    setUnlockedAchievements([]);
-
-    let assistantContent = '';
-    const assistantId = (Date.now() + 1).toString();
-    let currentToolCalls: ToolCall[] = [];
-
-    try {
-      for await (const event of streamMomo(input)) {
-        if (event.type === 'token') {
-          setMomoState('speaking');
-          assistantContent += event.content;
-          setMessages(prev => {
-            const others = prev.filter(m => m.id !== assistantId);
-            return [...others, { 
-              id: assistantId, 
-              role: 'assistant', 
-              content: assistantContent,
-              toolCalls: [...currentToolCalls]
-            }];
-          });
-          setStatus(null);
-        } else if (event.type === 'status') {
-          setMomoState('thinking');
-          setStatus(event.message);
-        } else if (event.type === 'tool_start') {
-          setMomoState('thinking');
-          const newTool: ToolCall = {
-            id: Math.random().toString(),
-            name: event.name,
-            inputs: event.inputs,
-            status: 'running'
-          };
-          currentToolCalls.push(newTool);
-          setMessages(prev => {
-            const others = prev.filter(m => m.id !== assistantId);
-            return [...others, { 
-              id: assistantId, 
-              role: 'assistant', 
-              content: assistantContent,
-              toolCalls: [...currentToolCalls]
-            }];
-          });
-        } else if (event.type === 'tool_end') {
-          currentToolCalls = currentToolCalls.map(tc => 
-            tc.name === event.name && tc.status === 'running' 
-              ? { ...tc, output: event.output, status: 'completed' }
-              : tc
-          );
-          setMessages(prev => {
-            const others = prev.filter(m => m.id !== assistantId);
-            return [...others, { 
-              id: assistantId, 
-              role: 'assistant', 
-              content: assistantContent,
-              toolCalls: [...currentToolCalls]
-            }];
-          });
-        } else if (event.type === 'done') {
-          setMomoState('idle');
-          setStatus(null);
-          if (event.xp_progress) {
-            updateUser({ xp_total: event.xp_progress.xp_total });
-            setXpUpdate({
-              amount: event.xp_progress.xp_awarded,
-              level: event.xp_progress.level,
-              leveledUp: event.xp_progress.leveled_up
-            });
-          }
-          if (event.new_achievements && event.new_achievements.length > 0) {
-            setUnlockedAchievements(event.new_achievements);
-          }
-          
-          setTimeout(() => {
-            setXpUpdate(null);
-            setUnlockedAchievements([]);
-          }, 8000);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      setMomoState('idle');
-      setStatus('Error connecting to Momo');
-    }
   };
 
   return (
@@ -169,7 +74,7 @@ export const Chat: React.FC = () => {
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center py-20">
             <div className="mb-8 animate-in fade-in zoom-in duration-700">
-              <Avatar size={120} state={momoState} />
+              <Avatar size={120} state={momoState as any} />
             </div>
             <h2 className="text-4xl font-semibold mb-4 text-[var(--foreground)] tracking-tight">Hello, {user?.name || 'Louis'}</h2>
             <p className="text-xl text-gray-500 font-medium">How can I help your workflow today?</p>

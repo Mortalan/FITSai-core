@@ -8,9 +8,10 @@ interface LayoutProps {
   children: React.ReactNode;
   onViewChange: (view: 'chat' | 'docs') => void;
   currentView: 'chat' | 'docs';
+  onNewChat: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentView }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentView, onNewChat }) => {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
@@ -23,7 +24,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
         </div>
 
         <button 
-          onClick={() => onViewChange('chat')}
+          onClick={onNewChat}
           className="flex items-center gap-2 bg-[var(--input-bg)] p-3 rounded-full mb-6 hover:opacity-80 transition-opacity border border-[var(--border)]"
         >
           <Plus size={20} className="text-[var(--accent)]" />
