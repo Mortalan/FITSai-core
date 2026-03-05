@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MessageSquare, Plus, Settings, LogOut, FileText, Trophy, Award } from 'lucide-react';
+import { MessageSquare, Plus, Settings as SettingsIcon, LogOut, FileText, Trophy, Award } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { ProgressDashboard } from './ProgressDashboard';
@@ -31,7 +31,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
       
       refreshHistory();
     }
-  }, [token]);
+  }, [token, currentView]); // Refresh history when switching to chat or docs
 
   const refreshHistory = async () => {
     try {
@@ -120,7 +120,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
             onClick={() => onViewChange('settings')}
             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'settings' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
           >
-            <Settings size={18} />
+            <SettingsIcon size={18} />
             <span className="text-sm font-semibold">Settings</span>
           </div>
           <div 
@@ -137,7 +137,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
         <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
              <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-               {dept?.branding?.custom_greeting || 'FITSai-Core v1.8.0'} • {currentView}
+               {dept?.branding?.custom_greeting || 'FITSai-Core v1.8.1'} • {currentView}
              </span>
           </div>
           <div className="flex items-center gap-3">

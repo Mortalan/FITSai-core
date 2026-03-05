@@ -11,7 +11,8 @@ from app.models.document import Document, DocumentVersion
 from app.models.department import Department
 from app.models.personality_mode import PersonalityMode
 from app.models.conversation import Conversation
-from app.models.budget import DepartmentBudget, ApiUsage # Import all models here
+from app.models.budget import DepartmentBudget, ApiUsage
+from app.services.reminder_service import Reminder # Import all models here
 from app.core.config import settings
 
 config = context.config

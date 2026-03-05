@@ -10,13 +10,14 @@ import { Settings } from './components/Settings';
 import { streamMomo, getConversation } from './api';
 import type { Message, ToolCall } from './types';
 
-export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'settings' | 'admin';
+export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'settings';
 
 function App() {
   const token = useAuthStore((state) => state.token);
   const updateUser = useAuthStore((state) => state.updateUser);
   const [view, setView] = useState<AppView>('chat');
   
+  // Centralized Chat State
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [momoState, setMomoState] = useState<'idle' | 'thinking' | 'speaking'>('idle');
@@ -28,7 +29,7 @@ function App() {
     return <Login />;
   }
 
-  const handleSendMessage = async (input: string) => {
+  const handleSendMessage = async (input: string, imageData?: string) => {
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
     setStatus('Momo is thinking...');
@@ -41,7 +42,7 @@ function App() {
     let currentToolCalls: ToolCall[] = [];
 
     try {
-      for await (const event of streamMomo(input, currentConversationId)) {
+      for await (const event of streamMomo(input, currentConversationId, imageData)) {
         if (event.type === 'token') {
           setMomoState('speaking');
           assistantContent += event.content;
@@ -164,7 +165,7 @@ function App() {
       {view === 'docs' && <DocumentLibrary />}
       {view === 'achievements' && <Achievements />}
       {view === 'leaderboard' && <Leaderboard />}
-      {view === 'settings' || view === 'admin' ? <Settings /> : null}
+      {view === 'settings' && <Settings />}
     </Layout>
   );
 }

@@ -79,6 +79,7 @@ class AgentState(TypedDict):
     tier: AITier
     user_id: int
     memories: List[str]
+    empathy_injection: str
 
 def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
     last_message = state["messages"][-1]
@@ -87,7 +88,6 @@ def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
     return "tools"
 
 async def call_momo(state: AgentState):
-    # 1. Fetch relevant memories if not already present
     memories = state.get("memories", [])
     if not memories and state.get("user_id"):
         user_query = state["messages"][-1].content
@@ -99,9 +99,11 @@ async def call_momo(state: AgentState):
     model_with_tools = model.bind_tools(tools)
     
     memory_context = "\n".join([f"- {m}" for m in memories]) if memories else "None"
+    empathy = state.get("empathy_injection", "")
     
     system_prompt = f"""You are Momo, an autonomous agentic ecosystem. 
     You have access to tools. When a user asks for a technical task, DO NOT just explain it. USE YOUR TOOLS.
+    {empathy}
     
     [Long-term Memory Context]:
     {memory_context}

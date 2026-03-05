@@ -16,6 +16,8 @@ from app.services.conversation_service import conversation_service
 from app.services.budget_service import budget_service
 from app.services.memory_service import memory_service
 from app.services.memory_extraction import memory_extractor
+from app.services.contextual_service import contextual_service
+from app.services.reminder_service import reminder_service
 from app.api.v1.auth import get_current_user
 from app.core.database import get_db, AsyncSessionLocal
 from app.models.user import User
@@ -47,7 +49,6 @@ async def get_history(
     return conv
 
 async def extract_and_store_memory(user_id: int, question: str, answer: str):
-    """Background task to extract and store new facts."""
     facts = await memory_extractor.extract_facts(question, answer)
     for fact in facts:
         await memory_service.store_memory(user_id, fact)
@@ -68,6 +69,10 @@ async def stream_momo(
         if not await budget_service.check_budget(db, current_user.department_id):
             raise HTTPException(status_code=402, detail="Department budget exceeded.")
 
+    # 1. Frustration Detection
+    frustration_level = contextual_service.detect_frustration(question)
+    empathy_injection = await contextual_service.get_empathy_injection(frustration_level)
+
     tier = AITier.TIER3 if image_data else router_service.classify(question)
 
     async def event_generator():
@@ -86,6 +91,7 @@ async def stream_momo(
 
         if tier == AITier.TIER1:
             ans = "Hi there! How can I help you today?"
+            if frustration_level > 0: ans = "I hear you, and I'm here to help. What's on your mind?"
             async with AsyncSessionLocal() as db:
                 await conversation_service.add_message(db, current_conv_id, current_user.id, "assistant", ans)
             yield f"event: token\ndata: {json.dumps({'content': ans})}\n\n"
@@ -102,7 +108,8 @@ async def stream_momo(
         initial_state = {
             "messages": lc_messages, 
             "tier": tier,
-            "user_id": current_user.id
+            "user_id": current_user.id,
+            "empathy_injection": empathy_injection
         }
         
         if image_data:
@@ -138,14 +145,18 @@ async def stream_momo(
                     progress = await gamification_service.award_xp(db, user, 10 + (tool_count * 20))
                     new_achievements = await achievement_service.check_achievements(db, user, "message", {})
                     
-                    # Trigger Memory Extraction in background
+                    # Proactive Nudge check
+                    nudge = await contextual_service.check_for_nudges(current_user.id, conv.messages)
+                    
+                    # Background Memory Extraction
                     background_tasks.add_task(extract_and_store_memory, current_user.id, question, full_assistant_answer)
                     
                     yield f"event: done\ndata: {json.dumps({
                         'status': 'finished',
                         'xp_progress': progress,
                         'new_achievements': new_achievements,
-                        'conversation_id': current_conv_id
+                        'conversation_id': current_conv_id,
+                        'nudge': nudge
                     })}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
