@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+venv/
+.env
+momo.log
+
+# Node
+node_modules/
+dist/
+.env.local
+frontend.log
+
+# Git
+.git/

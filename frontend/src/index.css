@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1f1f1f;
+  --sidebar: #f0f4f9;
+  --accent: #1a73e8;
+  --accent-foreground: #ffffff;
+  --border: #dadce0;
+  --input-bg: #f1f3f4;
+}
+
+@theme dark {
+  --background: #131314;
+  --foreground: #e3e3e3;
+  --sidebar: #1e1f20;
+  --accent: #8ab4f8;
+  --accent-foreground: #000000;
+  --border: #3c4043;
+  --input-bg: #282a2d;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom styles for readable elements */
+.btn-accent {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.chat-bubble-user {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.chat-bubble-momo {
+  background-color: var(--sidebar);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.sidebar-item:hover {
+  background-color: #dfe1e5;
+}
+
+.dark .sidebar-item:hover {
+  background-color: #3c4043;
+}
