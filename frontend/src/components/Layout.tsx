@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { MessageSquare, Plus, Settings, LogOut, FileText, Trophy, Award, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Plus, Settings, LogOut, FileText, Trophy, Award } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { ProgressDashboard } from './ProgressDashboard';
 import { Avatar } from './Avatar';
+import { getChatHistory } from '../api';
 import type { AppView } from '../App';
 import type { Department } from '../types';
 
@@ -12,21 +13,32 @@ interface LayoutProps {
   onViewChange: (view: AppView) => void;
   currentView: AppView;
   onNewChat: () => void;
+  onChatSelect: (id: number) => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentView, onNewChat }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentView, onNewChat, onChatSelect }) => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const logout = useAuthStore((state) => state.logout);
   const [dept, setDept] = useState<Department | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
 
   useEffect(() => {
     if (token) {
       axios.get('http://10.0.0.231:9000/api/v1/departments/me', {
         headers: { Authorization: `Bearer ${token}` }
       }).then(res => setDept(res.data)).catch(() => {});
+      
+      refreshHistory();
     }
   }, [token]);
+
+  const refreshHistory = async () => {
+    try {
+      const data = await getChatHistory();
+      setHistory(data);
+    } catch (err) {}
+  };
 
   return (
     <div className="flex h-screen bg-[var(--background)] text-[var(--foreground)] font-sans">
@@ -55,14 +67,31 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
           <ProgressDashboard />
         </div>
 
-        <nav className="flex-1 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar pr-1">
           <div 
             onClick={() => onViewChange('chat')}
             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'chat' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
           >
             <MessageSquare size={18} />
-            <span className="text-sm font-semibold">Chat</span>
+            <span className="text-sm font-semibold">Active Chat</span>
           </div>
+          
+          {history.length > 0 && (
+            <div className="py-2">
+              <p className="text-[10px] uppercase font-bold text-gray-400 px-3 mb-2 tracking-widest">Recent History</p>
+              {history.map(chat => (
+                <div 
+                  key={chat.id}
+                  onClick={() => onChatSelect(chat.id)}
+                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[var(--input-bg)] cursor-pointer transition-colors group mb-1"
+                >
+                  <MessageSquare size={14} className="text-gray-400 group-hover:text-[var(--accent)]" />
+                  <span className="text-xs font-medium truncate">{chat.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div 
             onClick={() => onViewChange('docs')}
             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'docs' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
@@ -84,19 +113,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
             <Trophy size={18} />
             <span className="text-sm font-semibold">Leaderboard</span>
           </div>
-          
-          {/* Admin God Mode (Hidden for non-admins) */}
-          <div 
-            onClick={() => onViewChange('admin')}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'admin' ? 'bg-red-500/10 text-red-500' : 'hover:bg-[var(--input-bg)] text-gray-400 opacity-50 hover:opacity-100'}`}
-          >
-            <ShieldAlert size={18} />
-            <span className="text-sm font-semibold">God Mode</span>
-          </div>
         </nav>
 
         <div className="mt-auto space-y-1 pt-4 border-t border-[var(--border)]">
-          <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--input-bg)] cursor-pointer transition-colors">
+          <div 
+            onClick={() => onViewChange('settings')}
+            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'settings' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
+          >
             <Settings size={18} />
             <span className="text-sm font-semibold">Settings</span>
           </div>
@@ -114,7 +137,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
         <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
              <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-               {dept?.branding?.custom_greeting || 'FITSai-Core v1.6.1'} • {currentView}
+               {dept?.branding?.custom_greeting || 'FITSai-Core v1.8.0'} • {currentView}
              </span>
           </div>
           <div className="flex items-center gap-3">

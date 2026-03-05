@@ -6,11 +6,11 @@ import { Login } from './components/Login';
 import { DocumentLibrary } from './components/Documents';
 import { Achievements } from './components/Achievements';
 import { Leaderboard } from './components/Leaderboard';
-import { GodMode } from './components/GodMode';
-import { streamMomo } from './api';
+import { Settings } from './components/Settings';
+import { streamMomo, getConversation } from './api';
 import type { Message, ToolCall } from './types';
 
-export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'admin';
+export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'settings' | 'admin';
 
 function App() {
   const token = useAuthStore((state) => state.token);
@@ -22,6 +22,7 @@ function App() {
   const [momoState, setMomoState] = useState<'idle' | 'thinking' | 'speaking'>('idle');
   const [xpUpdate, setXpUpdate] = useState<any>(null);
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<number | undefined>(undefined);
 
   if (!token) {
     return <Login />;
@@ -40,7 +41,7 @@ function App() {
     let currentToolCalls: ToolCall[] = [];
 
     try {
-      for await (const event of streamMomo(input)) {
+      for await (const event of streamMomo(input, currentConversationId)) {
         if (event.type === 'token') {
           setMomoState('speaking');
           assistantContent += event.content;
@@ -93,6 +94,7 @@ function App() {
         } else if (event.type === 'done') {
           setMomoState('idle');
           setStatus(null);
+          if (event.conversation_id) setCurrentConversationId(event.conversation_id);
           if (event.xp_progress) {
             updateUser({ xp_total: event.xp_progress.xp_total });
             setXpUpdate({
@@ -124,11 +126,31 @@ function App() {
     setMomoState('idle');
     setXpUpdate(null);
     setUnlockedAchievements([]);
+    setCurrentConversationId(undefined);
     setView('chat');
   };
 
+  const handleChatSelect = async (id: number) => {
+    setStatus('Loading conversation...');
+    setView('chat');
+    try {
+      const conv = await getConversation(id);
+      setCurrentConversationId(id);
+      const mappedMessages: Message[] = conv.messages.map((m: any, i: number) => ({
+        id: `msg_${i}`,
+        role: m.role,
+        content: m.content,
+        toolCalls: m.tool_calls
+      }));
+      setMessages(mappedMessages);
+      setStatus(null);
+    } catch (err) {
+      setStatus('Failed to load conversation');
+    }
+  };
+
   return (
-    <Layout onViewChange={setView} currentView={view} onNewChat={handleNewChat}>
+    <Layout onViewChange={setView} currentView={view} onNewChat={handleNewChat} onChatSelect={handleChatSelect}>
       {view === 'chat' && (
         <Chat 
           messages={messages} 
@@ -142,7 +164,7 @@ function App() {
       {view === 'docs' && <DocumentLibrary />}
       {view === 'achievements' && <Achievements />}
       {view === 'leaderboard' && <Leaderboard />}
-      {view === 'admin' && <GodMode />}
+      {view === 'settings' || view === 'admin' ? <Settings /> : null}
     </Layout>
   );
 }

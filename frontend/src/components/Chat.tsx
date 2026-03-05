@@ -4,7 +4,6 @@ import { streamMomo } from '../api';
 import { useAuthStore } from '../store/authStore';
 import useVoice from '../hooks/useVoice';
 import { Avatar } from './Avatar';
-import { HolographicAvatar } from './HolographicAvatar';
 import { BriefingCard } from './BriefingCard';
 import type { Message, ToolCall } from '../types';
 
@@ -79,15 +78,11 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center py-10 animate-in fade-in zoom-in duration-1000">
-            <div className="relative mb-10 group cursor-pointer" onClick={voiceState === 'idle' ? startVoice : stopVoice}>
-              <HolographicAvatar size={240} state={voiceState !== 'idle' ? voiceState : momoState as any} audioData={audioData} level={user?.character_level || 1} />
-              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-blue-500/10 blur-xl rounded-full animate-pulse" />
-            </div>
-            
             <div className="mb-10 w-full flex justify-center">
               <BriefingCard />
             </div>
 
+            <h2 className="text-5xl font-bold mb-4 text-[var(--foreground)] tracking-tight">Hello, {user?.name || 'Louis'}</h2>
             <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto">
               Momo is ready. Use the mic or type below to begin.
             </p>
@@ -175,14 +170,14 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
             className={`p-4 rounded-2xl border transition-all shadow-sm ${
               voiceState === 'listening' 
                 ? 'bg-red-500 text-white border-red-600 animate-pulse' 
-                : 'bg-[var(--sidebar)] text-[var(--foreground)] border-[var(--border)] hover:border-[var(--accent)]'
+                : 'bg-[var(--sidebar)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--accent)]'
             }`}
           >
             {voiceState === 'idle' ? <Mic size={24} /> : <Square size={24} />}
           </button>
         </form>
         <p className="text-[11px] text-center mt-3 text-gray-400 font-bold uppercase tracking-widest opacity-50">
-          Momo v1.6.1 • Real-time Voice Enabled • Tier 3 Neural Engine
+          Momo v1.7.1 • Port 9000 • Tier 3 Routing
         </p>
       </div>
     </div>
