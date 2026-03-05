@@ -1,7 +1,8 @@
 import httpx
 import logging
 from enum import Enum
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,13 @@ class AITier(str, Enum):
 class RouterService:
     """Decides which AI tier should handle a user query."""
 
+    SYSTEM_QUERY_PATTERNS = [
+        r"(system|server|momo) (status|health|report|check|info|load|usage)",
+        r"how.*your (system|server)s?",
+        r"are you (working|running|online)",
+        r"check (system|server|service)s?"
+    ]
+
     COMPLEX_KEYWORDS = [
         'analyze', 'compare', 'contrast', 'evaluate', 'assess', 'comprehensive',
         'strategy', 'implement', 'architecture', 'design', 'plan', 'project',
@@ -23,31 +31,22 @@ class RouterService:
         query_lower = query.lower().strip()
         word_count = len(query.split())
 
-        # 1. Tier 1: Greetings/Thanks
+        # 1. System Queries -> Tier 3 (Needs tool use)
+        for pattern in self.SYSTEM_QUERY_PATTERNS:
+            if re.search(pattern, query_lower):
+                logger.info("Routing to Tier 3: System query detected")
+                return AITier.TIER3
+
+        # 2. Tier 1: Greetings/Thanks
         greetings = ['hello', 'hi', 'hey', 'thanks', 'thank you', 'bye']
         if any(g in query_lower for g in greetings) and word_count < 5:
             return AITier.TIER1
 
-        # 2. Tier 3: Complex / High word count
+        # 3. Tier 3: Complex / High word count
         if word_count > 30 or any(k in query_lower for k in self.COMPLEX_KEYWORDS):
             return AITier.TIER3
 
-        # 3. Default Tier 2: Local Model
+        # 4. Default Tier 2: Local Model
         return AITier.TIER2
-
-    async def get_local_response(self, query: str) -> str:
-        """Calls the local Mistral service on Port 8002."""
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(
-                    "http://localhost:8002/infer",
-                    json={"query": query, "tier": "tier2", "max_tokens": 512}
-                )
-                if resp.status_code == 200:
-                    return resp.json().get("response", "")
-                return "[Local AI Error] Service unavailable."
-        except Exception as e:
-            logger.error(f"Local AI failure: {e}")
-            return f"[Local AI Error] {str(e)}"
 
 router_service = RouterService()

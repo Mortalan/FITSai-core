@@ -16,6 +16,7 @@ from app.services.document_service import document_service
 from app.services.ghl_service import ghl_service
 from app.services.glpi_service import glpi_service
 from app.services.router_service import router_service, AITier
+from app.services.system_monitor_service import system_monitor
 from app.models.user import User
 
 # --- Momo's Core Toolset ---
@@ -62,7 +63,12 @@ async def glpi_asset_search(query: str) -> str:
     if not assets: return "No assets found in GLPI matching your query."
     return f"GLPI Results: {json.dumps(assets[:3])}"
 
-tools = [file_write, file_read, doc_create, ghl_contact_lookup, glpi_asset_search]
+@tool
+def system_report() -> str:
+    """Generates a comprehensive report of Momo's current system health (CPU, RAM, GPU, Disk, Services)."""
+    return system_monitor.get_system_report()
+
+tools = [file_write, file_read, doc_create, ghl_contact_lookup, glpi_asset_search, system_report]
 tool_node = ToolNode(tools)
 
 # --- Momo's Brain (LangGraph) ---
@@ -78,9 +84,7 @@ def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
     return "tools"
 
 async def call_momo(state: AgentState):
-    # Select model based on tier
     model_name = "gpt-4o-mini" if state.get("tier") == AITier.TIER2 else "gpt-4o"
-    
     model = ChatOpenAI(model=model_name, streaming=True, api_key=settings.OPENAI_API_KEY)
     model_with_tools = model.bind_tools(tools)
     
@@ -88,6 +92,8 @@ async def call_momo(state: AgentState):
     You have access to tools. When a user asks for a technical task, 
     DO NOT just explain it. USE YOUR TOOLS. 
     State your plan briefly, then execute.
+    
+    You can check your own system health using the system_report tool.
     """
     messages = [SystemMessage(content=system_prompt)] + state["messages"]
     response = await model_with_tools.ainvoke(messages)
