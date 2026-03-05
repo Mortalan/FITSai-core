@@ -1,6 +1,6 @@
 # FITSai-Core (Codename: Momo) Master Blueprint & Roadmap
 
-**Version:** 1.4.0 (Autonomous SOPs & Gamification Verified)
+**Version:** 1.5.0 (Enterprise Integration Phase)
 **Date:** 2026-03-05
 **Objective:** To build Momo in total isolation on the same production server as Felicia, ensuring zero interruption to legacy users while maintaining state resilience.
 
@@ -59,13 +59,15 @@ Momo is built as a **Stateful Agentic Graph**.
 
 ### Phase 4: Document Management (v1.4.0)
 *   [x] Document Storage & Versioning Database Schema.
-*   [x] Knowledge Base (SOP) Library UI.
+*   [x] Knowledge Base (SOP) Library UI (List, Read, Create).
 *   [x] Autonomous SOP Creation/Reading via Agentic Tools.
 
-### Phase 5: Integrations & Scale (v1.5.0) - PLANNED
-*   [ ] GoHighLevel (GHL) Integration.
-*   [ ] GLPI Asset Management Integration.
-*   [ ] Data migration ETL from Felicia.
+### Phase 5: Enterprise Integrations (v1.5.0) - IN PROGRESS
+*   [x] GoHighLevel (GHL) Service Implementation.
+*   [x] GLPI Asset Management Service Implementation.
+*   [ ] Multi-tenant White-labeling support.
+*   [ ] GHL Lead Sync Tool.
+*   [ ] GLPI Ticket Resolution Tool.
 
 ---
 
@@ -74,4 +76,5 @@ Momo is built as a **Stateful Agentic Graph**.
 *   **v1.1.0:** Finalized Agent-First architecture and Monorepo.
 *   **v1.2.0:** Phase 2 Complete. Momo Brain and Sleek UI live.
 *   **v1.3.0:** Gamification and Avatars ported.
-*   **v1.4.0 (2026-03-05):** Phase 4 Complete. Autonomous Knowledge Base (SOPs) implemented and end-to-end verified.
+*   **v1.4.0:** Phase 4 Complete. Autonomous SOPs and Polish verified.
+*   **v1.5.0 (2026-03-05):** Initiated Phase 5. Enterprise services (GHL/GLPI) initialized and tools defined.
