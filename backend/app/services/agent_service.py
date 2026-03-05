@@ -15,9 +15,10 @@ from app.core.database import AsyncSessionLocal
 from app.services.document_service import document_service
 from app.services.ghl_service import ghl_service
 from app.services.glpi_service import glpi_service
+from app.services.router_service import router_service, AITier
 from app.models.user import User
 
-# --- Momo's Enterprise Toolset ---
+# --- Momo's Core Toolset ---
 
 @tool
 def file_write(path: str, content: str) -> str:
@@ -64,10 +65,11 @@ async def glpi_asset_search(query: str) -> str:
 tools = [file_write, file_read, doc_create, ghl_contact_lookup, glpi_asset_search]
 tool_node = ToolNode(tools)
 
-# --- Momo's Brain ---
+# --- Momo's Brain (LangGraph) ---
 
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
+    tier: AITier
 
 def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
     last_message = state["messages"][-1]
@@ -76,15 +78,15 @@ def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
     return "tools"
 
 async def call_momo(state: AgentState):
-    model = ChatOpenAI(model="gpt-4o", streaming=True, api_key=settings.OPENAI_API_KEY)
+    # Select model based on tier
+    model_name = "gpt-4o-mini" if state.get("tier") == AITier.TIER2 else "gpt-4o"
+    
+    model = ChatOpenAI(model=model_name, streaming=True, api_key=settings.OPENAI_API_KEY)
     model_with_tools = model.bind_tools(tools)
     
     system_prompt = """You are Momo, an autonomous agentic ecosystem. 
-    You have access to enterprise tools including GHL (GoHighLevel) and GLPI.
-    When a user asks for technical tasks, CRM lookups, or asset management, 
+    You have access to tools. When a user asks for a technical task, 
     DO NOT just explain it. USE YOUR TOOLS. 
-    
-    You can also manage the Knowledge Base using doc_create.
     State your plan briefly, then execute.
     """
     messages = [SystemMessage(content=system_prompt)] + state["messages"]

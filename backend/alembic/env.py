@@ -7,7 +7,9 @@ from alembic import context
 from app.core.database import Base
 from app.models.user import User
 from app.models.achievement import Achievement, UserAchievement
-from app.models.document import Document, DocumentVersion # Import all models here
+from app.models.document import Document, DocumentVersion
+from app.models.department import Department
+from app.models.personality_mode import PersonalityMode # Import all models here
 from app.core.config import settings
 
 config = context.config

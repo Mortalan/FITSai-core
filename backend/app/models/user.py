@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -19,4 +20,11 @@ class User(Base):
     avatar_url = Column(String, default="/assets/avfel2.png")
     avatar_state = Column(String, default="idle")
     
+    # Multi-tenancy
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    department = relationship("Department", back_populates="users")
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+# Import Department here to avoid circular dependencies but ensure it's in the registry
+from app.models.department import Department
