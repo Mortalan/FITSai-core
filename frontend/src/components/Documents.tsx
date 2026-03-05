@@ -33,7 +33,7 @@ export const DocumentLibrary: React.FC = () => {
 
   const fetchDocs = async () => {
     try {
-      const resp = await axios.get(`${API_BASE_URL}/docs`, {
+      const resp = await axios.get(`${API_BASE_URL}/docs/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDocs(resp.data);
@@ -62,7 +62,7 @@ export const DocumentLibrary: React.FC = () => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      await axios.post(`${API_BASE_URL}/docs`, 
+      await axios.post(`${API_BASE_URL}/docs/`, 
         { title: newTitle, content: newContent, category: 'SOP' },
         { headers: { Authorization: `Bearer ${token}` } }
       );

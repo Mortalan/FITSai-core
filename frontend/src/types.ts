@@ -8,6 +8,26 @@ export interface ToolCall {
   status: 'running' | 'completed' | 'error';
 }
 
+export interface Department {
+  id: number;
+  name: string;
+  branding: {
+    primary_color?: string;
+    logo_url?: string | null;
+    custom_greeting?: string;
+  };
+}
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  character_class: string;
+  xp_total: number;
+  department_id?: number | null;
+  department?: Department | null;
+}
+
 export interface Message {
   id: string;
   role: MessageRole;

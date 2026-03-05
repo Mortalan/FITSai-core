@@ -4,15 +4,19 @@ import { Layout } from './components/Layout';
 import { Chat } from './components/Chat';
 import { Login } from './components/Login';
 import { DocumentLibrary } from './components/Documents';
+import { Achievements } from './components/Achievements';
+import { Leaderboard } from './components/Leaderboard';
+import { GodMode } from './components/GodMode';
 import { streamMomo } from './api';
 import type { Message, ToolCall } from './types';
+
+export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'admin';
 
 function App() {
   const token = useAuthStore((state) => state.token);
   const updateUser = useAuthStore((state) => state.updateUser);
-  const [view, setView] = useState<'chat' | 'docs'>('chat');
+  const [view, setView] = useState<AppView>('chat');
   
-  // Centralized Chat State
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [momoState, setMomoState] = useState<'idle' | 'thinking' | 'speaking'>('idle');
@@ -125,7 +129,7 @@ function App() {
 
   return (
     <Layout onViewChange={setView} currentView={view} onNewChat={handleNewChat}>
-      {view === 'chat' ? (
+      {view === 'chat' && (
         <Chat 
           messages={messages} 
           onSendMessage={handleSendMessage}
@@ -134,9 +138,11 @@ function App() {
           xpUpdate={xpUpdate}
           unlockedAchievements={unlockedAchievements}
         />
-      ) : (
-        <DocumentLibrary />
       )}
+      {view === 'docs' && <DocumentLibrary />}
+      {view === 'achievements' && <Achievements />}
+      {view === 'leaderboard' && <Leaderboard />}
+      {view === 'admin' && <GodMode />}
     </Layout>
   );
 }

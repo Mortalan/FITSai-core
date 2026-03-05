@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Terminal, CheckCircle2, ChevronDown, ChevronUp, Sparkles, Award } from 'lucide-react';
+import { Send, Loader2, Terminal, CheckCircle2, ChevronDown, ChevronUp, Sparkles, Award, Mic, Square } from 'lucide-react';
 import { streamMomo } from '../api';
 import { useAuthStore } from '../store/authStore';
+import useVoice from '../hooks/useVoice';
 import { Avatar } from './Avatar';
+import { HolographicAvatar } from './HolographicAvatar';
+import { BriefingCard } from './BriefingCard';
 import type { Message, ToolCall } from '../types';
 
 const ToolCallCard: React.FC<{ tool: ToolCall }> = ({ tool }) => {
@@ -56,6 +59,9 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+
+  const { voiceState, startVoice, stopVoice, audioData } = useVoice(token, (text) => {});
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,12 +78,19 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
     <div className="flex flex-col h-full bg-[var(--background)] font-sans">
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-center py-20">
-            <div className="mb-8 animate-in fade-in zoom-in duration-700">
-              <Avatar size={120} state={momoState as any} />
+          <div className="h-full flex flex-col items-center justify-center text-center py-10 animate-in fade-in zoom-in duration-1000">
+            <div className="relative mb-10 group cursor-pointer" onClick={voiceState === 'idle' ? startVoice : stopVoice}>
+              <HolographicAvatar size={240} state={voiceState !== 'idle' ? voiceState : momoState as any} audioData={audioData} level={user?.character_level || 1} />
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-blue-500/10 blur-xl rounded-full animate-pulse" />
             </div>
-            <h2 className="text-4xl font-semibold mb-4 text-[var(--foreground)] tracking-tight">Hello, {user?.name || 'Louis'}</h2>
-            <p className="text-xl text-gray-500 font-medium">How can I help your workflow today?</p>
+            
+            <div className="mb-10 w-full flex justify-center">
+              <BriefingCard />
+            </div>
+
+            <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto">
+              Momo is ready. Use the mic or type below to begin.
+            </p>
           </div>
         )}
         
@@ -86,7 +99,7 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
             <div key={m.id} className={`flex gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {m.role === 'assistant' && (
                 <div className="mt-1 flex-shrink-0">
-                  <Avatar size={28} />
+                  <Avatar size={32} />
                 </div>
               )}
               
@@ -105,10 +118,14 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
             </div>
           ))}
           
-          {status && (
-            <div className="flex items-center gap-3 text-sm text-gray-500 ml-12">
+          {(status || voiceState !== 'idle') && (
+            <div className="flex items-center gap-4 text-sm text-gray-500 ml-12 animate-pulse">
               <Loader2 size={16} className="animate-spin text-[var(--accent)]" />
-              <span className="font-medium tracking-tight">{status}</span>
+              <span className="font-bold tracking-tight uppercase text-[10px] tracking-widest">
+                {voiceState === 'listening' ? 'Momo is listening...' : 
+                 voiceState === 'speaking' ? 'Momo is speaking...' : 
+                 status || 'Momo is processing...'}
+              </span>
             </div>
           )}
 
@@ -133,24 +150,39 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
       </div>
 
       <div className="p-6">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask Momo anything..."
-            className="w-full bg-[var(--input-bg)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl py-4 pl-6 pr-14 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all placeholder:text-gray-500 shadow-sm"
-          />
-          <button 
-            type="submit"
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-[var(--accent)] text-[var(--accent-foreground)] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-30 shadow-sm"
-            disabled={!input.trim()}
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative group flex items-center gap-3">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={voiceState === 'listening' ? "Listening..." : "Ask Momo anything..."}
+              className="w-full bg-[var(--input-bg)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl py-5 pl-6 pr-14 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all placeholder:text-gray-500 shadow-sm font-sans"
+              disabled={voiceState !== 'idle'}
+            />
+            <button 
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-[var(--accent)] text-[var(--accent-foreground)] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-30 shadow-sm"
+              disabled={!input.trim() || voiceState !== 'idle'}
+            >
+              <Send size={22} />
+            </button>
+          </div>
+          
+          <button
+            type="button"
+            onClick={voiceState === 'idle' ? startVoice : stopVoice}
+            className={`p-4 rounded-2xl border transition-all shadow-sm ${
+              voiceState === 'listening' 
+                ? 'bg-red-500 text-white border-red-600 animate-pulse' 
+                : 'bg-[var(--sidebar)] text-[var(--foreground)] border-[var(--border)] hover:border-[var(--accent)]'
+            }`}
           >
-            <Send size={20} />
+            {voiceState === 'idle' ? <Mic size={24} /> : <Square size={24} />}
           </button>
         </form>
-        <p className="text-[11px] text-center mt-3 text-gray-500 font-medium opacity-70 font-sans">
-          Momo is an autonomous agent. Confirm critical system changes before proceeding.
+        <p className="text-[11px] text-center mt-3 text-gray-400 font-bold uppercase tracking-widest opacity-50">
+          Momo v1.6.1 • Real-time Voice Enabled • Tier 3 Neural Engine
         </p>
       </div>
     </div>

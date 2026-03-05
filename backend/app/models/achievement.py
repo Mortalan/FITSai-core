@@ -11,6 +11,7 @@ class Achievement(Base):
     rarity = Column(String, default="COMMON") # COMMON, RARE, EPIC, LEGENDARY
     icon = Column(String) # Lucide icon name
     xp_reward = Column(Integer, default=50)
+    title_reward = Column(String, nullable=True)
 
 class UserAchievement(Base):
     __tablename__ = "user_achievements"
@@ -19,3 +20,5 @@ class UserAchievement(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     achievement_id = Column(Integer, ForeignKey("achievements.id"))
     unlocked_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_claimed = Column(Boolean, default=False)
+    claimed_at = Column(DateTime(timezone=True), nullable=True)
