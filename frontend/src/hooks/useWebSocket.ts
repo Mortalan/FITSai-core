@@ -10,8 +10,8 @@ function useWebSocket(
   const [state, setState] = useState<ConnectionState>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
+  const connectionInProgressRef = useRef(false);
   
-  // Use refs for callbacks to prevent reconnection when they change
   const onMessageRef = useRef(onMessage);
   const onBinaryRef = useRef(onBinary);
 
@@ -21,28 +21,30 @@ function useWebSocket(
   }, [onMessage, onBinary]);
 
   const connect = useCallback(() => {
-    if (!token || wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
-      return;
-    }
+    // Only connect if we have a token and aren't already connected or connecting
+    if (!token || connectionInProgressRef.current) return;
+    if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) return;
 
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
 
+    connectionInProgressRef.current = true;
     setState('connecting');
-    console.log('[WS] Connecting to Momo Voice...');
     
     const host = window.location.hostname || '10.0.0.231';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${host}:9000/api/v1/voice/ws`;
+    const wsUrl = `${protocol}//${host}:9000/api/v1/voice/ws?token=${token}`;
     
     const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
     ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
-      console.log('[WS] Connected');
+      console.log('[WS] Voice Engine Ready');
       setState('connected');
+      connectionInProgressRef.current = false;
     };
 
     ws.onmessage = (e) => {
@@ -52,44 +54,56 @@ function useWebSocket(
         try {
           onMessageRef.current(JSON.parse(e.data));
         } catch (err) {
-          console.error('[WS] Parse error:', err);
+          // Quiet parse error for keep-alives
         }
       }
     };
 
     ws.onclose = (e) => {
-      console.log('[WS] Closed:', e.code, e.reason);
-      setState('disconnected');
-      if (e.code !== 1000 && !reconnectTimerRef.current) {
-        reconnectTimerRef.current = window.setTimeout(connect, 5000);
+      // code 1000 is a clean close (unmounting)
+      if (e.code !== 1000) {
+        console.log('[WS] Connection Closed:', e.code);
+        setState('disconnected');
+        // Exponential backoff or simple delay
+        if (!reconnectTimerRef.current) {
+          reconnectTimerRef.current = window.setTimeout(() => {
+            connectionInProgressRef.current = false;
+            connect();
+          }, 5000);
+        }
       }
+      connectionInProgressRef.current = false;
     };
 
-    ws.onerror = (e) => {
-      console.error('[WS] Error:', e);
-      setState('error');
+    ws.onerror = () => {
+      // Don't log error if we're just unmounting
+      if (wsRef.current?.readyState !== WebSocket.CLOSED) {
+        setState('error');
+      }
+      connectionInProgressRef.current = false;
     };
-
-    wsRef.current = ws;
-  }, [token]); // Removed onMessage/onBinary from dependencies
+  }, [token]);
 
   useEffect(() => {
-    connect();
+    // Small delay to let React finishes its double-mount dance in Dev mode
+    const timer = setTimeout(connect, 100);
     return () => {
+      clearTimeout(timer);
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       if (wsRef.current) {
-        console.log('[WS] Cleaning up connection');
-        wsRef.current.close(1000, 'Unmounting');
+        const socket = wsRef.current;
         wsRef.current = null;
+        socket.onclose = null; // Prevent onclose firing during cleanup
+        socket.onerror = null;
+        socket.close(1000);
       }
+      connectionInProgressRef.current = false;
     };
   }, [connect]);
 
   const send = useCallback((data: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(typeof data === 'string' ? data : JSON.stringify(data));
-    } else {
-      console.warn('[WS] Cannot send, socket not open');
     }
   }, []);
 

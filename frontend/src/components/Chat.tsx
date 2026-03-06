@@ -1,51 +1,26 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Loader2, Terminal, CheckCircle2, ChevronDown, ChevronUp, Sparkles, Award, Mic, Square, ImagePlus, X, Copy, Check } from 'lucide-react';
-import { streamMomo } from '../api';
-import { useAuthStore } from '../store/authStore';
-import useVoice from '../hooks/useVoice';
 import { Avatar } from './Avatar';
 import { BriefingCard } from './BriefingCard';
+import { TemplateSelector } from './TemplateSelector';
+import { useAuthStore } from '../store/authStore';
 import type { Message, ToolCall } from '../types';
 
 const ToolCallCard: React.FC<{ tool: ToolCall }> = ({ tool }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="my-2 border border-[var(--border)] rounded-xl overflow-hidden bg-white dark:bg-black/20 shadow-sm transition-all hover:shadow-md">
-      <div 
-        className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors" onClick={() => setIsOpen(!isOpen)}>
         <div className="flex items-center gap-3">
-          {tool.status === 'running' ? (
-            <Loader2 size={16} className="animate-spin text-[var(--accent)]" />
-          ) : (
-            <CheckCircle2 size={16} className="text-green-500" />
-          )}
-          <div className="flex items-center gap-2">
-            <Terminal size={14} className="text-gray-400" />
-            <span className="text-sm font-medium font-mono">{tool.name}</span>
-          </div>
+          {tool.status === 'running' ? <Loader2 size={16} className="animate-spin text-[var(--accent)]" /> : <CheckCircle2 size={16} className="text-green-500" />}
+          <div className="flex items-center gap-2"><Terminal size={14} className="text-gray-400" /><span className="text-sm font-medium font-mono">{tool.name}</span></div>
         </div>
         {isOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
       </div>
       {isOpen && (
         <div className="p-3 border-t border-[var(--border)] bg-gray-50/50 dark:bg-black/40 space-y-3">
-          {tool.inputs && (
-            <div>
-              <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 ml-1 tracking-wider font-sans">Input</p>
-              <pre className="text-xs p-2 rounded-lg bg-white dark:bg-black/20 border border-[var(--border)] overflow-x-auto font-mono text-gray-600 dark:text-gray-300">
-                {JSON.stringify(tool.inputs, null, 2)}
-              </pre>
-            </div>
-          )}
-          {tool.output && (
-            <div>
-              <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 ml-1 tracking-wider font-sans">Output</p>
-              <pre className="text-xs p-2 rounded-lg bg-white dark:bg-black/20 border border-[var(--border)] overflow-x-auto font-mono text-green-600 dark:text-green-400">
-                {tool.output}
-              </pre>
-            </div>
-          )}
+          {tool.inputs && <div><p className="text-[10px] uppercase font-bold text-gray-400 mb-1 ml-1 tracking-wider font-sans">Input</p><pre className="text-xs p-2 rounded-lg bg-white dark:bg-black/20 border border-[var(--border)] overflow-x-auto font-mono text-gray-600 dark:text-gray-300">{JSON.stringify(tool.inputs, null, 2)}</pre></div>}
+          {tool.output && <div><p className="text-[10px] uppercase font-bold text-gray-400 mb-1 ml-1 tracking-wider font-sans">Output</p><pre className="text-xs p-2 rounded-lg bg-white dark:bg-black/20 border border-[var(--border)] overflow-x-auto font-mono text-green-600 dark:text-green-400">{tool.output}</pre></div>}
         </div>
       )}
     </div>
@@ -54,26 +29,14 @@ const ToolCallCard: React.FC<{ tool: ToolCall }> = ({ tool }) => {
 
 const MessageBubble: React.FC<{ m: Message }> = ({ m }) => {
   const [copied, setCopied] = useState(false);
-  
-  const handleCopy = () => {
-    navigator.clipboard.writeText(m.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
+  const handleCopy = () => { navigator.clipboard.writeText(m.content); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   return (
     <div className={`flex gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       {m.role === 'assistant' && <div className="mt-1 flex-shrink-0"><Avatar size={32} /></div>}
       <div className={`max-w-[85%] rounded-2xl p-4 relative group ${m.role === 'user' ? 'chat-bubble-user shadow-md' : 'chat-bubble-momo shadow-sm'}`}>
-        {m.toolCalls && m.toolCalls.length > 0 && (
-          <div className="mb-4">{m.toolCalls.map(tc => <ToolCallCard key={tc.id} tool={tc} />)}</div>
-        )}
+        {m.toolCalls && m.toolCalls.length > 0 && <div className="mb-4">{m.toolCalls.map(tc => <ToolCallCard key={tc.id} tool={tc} />)}</div>}
         <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{m.content}</p>
-        
-        <button 
-          onClick={handleCopy}
-          className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20"
-        >
+        <button onClick={handleCopy} className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20">
           {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} className="text-gray-400" />}
         </button>
       </div>
@@ -81,14 +44,16 @@ const MessageBubble: React.FC<{ m: Message }> = ({ m }) => {
   );
 };
 
-export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string, imageData?: string) => void, status: string | null, momoState: string, xpUpdate: any, unlockedAchievements: string[] }> = ({ messages, onSendMessage, status, momoState, xpUpdate, unlockedAchievements }) => {
+export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string, imageData?: string) => void, status: string | null, momoState: string, xpUpdate: any, unlockedAchievements: string[], voice: any }> = ({ messages, onSendMessage, status, momoState, xpUpdate, unlockedAchievements, voice }) => {
   const [input, setInput] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const user = useAuthStore((state) => state.user);
-  const token = useAuthStore((state) => state.token);
 
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
@@ -100,13 +65,22 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
   };
 
   useEffect(() => {
-    if (shouldAutoScroll) {
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (shouldAutoScroll) scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, status, shouldAutoScroll]);
 
-  const handleVoiceMessage = useCallback((text: string) => {}, []);
-  const { voiceState, startVoice, stopVoice } = useVoice(token, handleVoiceMessage);
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 't') {
+        e.preventDefault();
+        setShowTemplates(prev => !prev);
+      } else if (e.key === 'Escape' && showTemplates) {
+        setShowTemplates(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showTemplates]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,14 +100,22 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
     setShouldAutoScroll(true);
   };
 
+  const handleTemplateSelect = (prompt: string) => {
+    setInput(prompt);
+    setShowTemplates(false);
+    inputRef.current?.focus();
+  };
+
+  const { voiceState, startVoice, stopVoice } = voice;
+
   return (
-    <div className="flex flex-col h-full bg-[var(--background)] font-sans">
+    <div className="flex flex-col h-full bg-[var(--background)] font-sans relative">
       <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center py-10 animate-in fade-in zoom-in duration-1000">
             <div className="mb-10 w-full flex justify-center"><BriefingCard /></div>
             <h2 className="text-5xl font-bold mb-4 text-[var(--foreground)] tracking-tight">Hello, {user?.name || 'Louis'}</h2>
-            <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto">Momo is ready. Analyze images, manage SOPs, or speak your mind.</p>
+            <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto">Momo is ready. Use the mic, type below, or press <kbd className="bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-sm mx-1">Ctrl+T</kbd> for templates.</p>
           </div>
         )}
         
@@ -144,7 +126,7 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
             <div className="flex items-center gap-4 text-sm text-gray-500 ml-12 animate-pulse">
               <Loader2 size={16} className="animate-spin text-[var(--accent)]" />
               <span className="font-bold tracking-tight uppercase text-[10px] tracking-widest">
-                {voiceState === 'listening' ? 'Momo is listening...' : status || 'Momo is processing...'}
+                {voiceState === 'listening' ? 'Momo is listening...' : voiceState === 'speaking' ? 'Momo is speaking...' : status || 'Momo is processing...'}
               </span>
             </div>
           )}
@@ -152,8 +134,7 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
           <div className="space-y-2 flex flex-col items-end">
             {xpUpdate && (
               <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-1.5 rounded-full w-fit mr-2 animate-bounce shadow-sm">
-                <Sparkles size={12} />
-                <span>+{xpUpdate.amount} XP earned</span>
+                <Sparkles size={12} /><span>+{xpUpdate.amount} XP earned</span>
               </div>
             )}
           </div>
@@ -162,13 +143,12 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
       </div>
 
       {!shouldAutoScroll && (
-        <button 
-          onClick={() => { setShouldAutoScroll(true); scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
-          className="absolute bottom-32 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl animate-bounce"
-        >
+        <button onClick={() => { setShouldAutoScroll(true); scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }} className="absolute bottom-32 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl animate-bounce">
           New messages below
         </button>
       )}
+
+      {showTemplates && <TemplateSelector onSelect={handleTemplateSelect} onClose={() => setShowTemplates(false)} />}
 
       <div className="p-6">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
@@ -182,6 +162,7 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
           <div className="relative group flex items-center gap-3">
             <div className="relative flex-1">
               <input
+                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -193,10 +174,10 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
               <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
               <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-[var(--accent)] text-white rounded-xl hover:opacity-90 shadow-sm" disabled={(!input.trim() && !selectedImage) || voiceState !== 'idle'}><Send size={22} /></button>
             </div>
-            <button type="button" onClick={voiceState === 'idle' ? startVoice : stopVoice} className={`p-4 rounded-2xl border transition-all shadow-sm ${voiceState === 'listening' ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--sidebar)] hover:border-[var(--accent)]'}`}>{voiceState === 'idle' ? <Mic size={24} /> : <Square size={24} />}</button>
+            <button type="button" onClick={voiceState === 'idle' ? startVoice : stopVoice} className={`p-4 rounded-2xl border transition-all shadow-sm ${voiceState === 'listening' ? 'bg-red-500 text-white border-red-600 animate-pulse' : 'bg-[var(--sidebar)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--accent)]'}`}>{voiceState === 'idle' ? <Mic size={24} /> : <Square size={24} />}</button>
           </div>
         </form>
-        <p className="text-[11px] text-center mt-3 text-gray-400 font-bold uppercase tracking-widest opacity-50">Momo v1.9.5 • Smart Tools Enabled • stable-v2</p>
+        <p className="text-[11px] text-center mt-3 text-gray-400 font-bold uppercase tracking-widest opacity-50">Momo v2.0.0 • Press Ctrl+T for templates</p>
       </div>
     </div>
   );

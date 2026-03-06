@@ -1,17 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuthStore } from './store/authStore';
 import { Layout } from './components/Layout';
 import { Chat } from './components/Chat';
 import { Login } from './components/Login';
-import { DocumentLibrary } from './components/Documents';
-import { Achievements } from './components/Achievements';
-import { Leaderboard } from './components/Leaderboard';
-import { Settings } from './components/Settings';
-import { Reminders } from './components/Reminders';
+import { Workspace } from './components/Workspace';
 import { streamMomo, getConversation } from './api';
+import useVoice from './hooks/useVoice';
 import type { Message, ToolCall } from './types';
 
-export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'settings' | 'reminders';
+export type AppView = 'chat' | 'workspace';
 
 function App() {
   const token = useAuthStore((state) => state.token);
@@ -25,9 +22,10 @@ function App() {
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | undefined>(undefined);
 
-  if (!token) {
-    return <Login />;
-  }
+  const handleVoiceMessage = useCallback((text: string) => {}, []);
+  const voice = useVoice(token, handleVoiceMessage);
+
+  if (!token) return <Login />;
 
   const handleSendMessage = async (input: string, imageData?: string) => {
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
@@ -48,12 +46,7 @@ function App() {
           assistantContent += event.content;
           setMessages(prev => {
             const others = prev.filter(m => m.id !== assistantId);
-            return [...others, { 
-              id: assistantId, 
-              role: 'assistant', 
-              content: assistantContent,
-              toolCalls: [...currentToolCalls]
-            }];
+            return [...others, { id: assistantId, role: 'assistant', content: assistantContent, toolCalls: [...currentToolCalls] }];
           });
           setStatus(null);
         } else if (event.type === 'status') {
@@ -61,57 +54,28 @@ function App() {
           setStatus(event.message);
         } else if (event.type === 'tool_start') {
           setMomoState('thinking');
-          const newTool: ToolCall = {
-            id: Math.random().toString(),
-            name: event.name,
-            inputs: event.inputs,
-            status: 'running'
-          };
+          const newTool: ToolCall = { id: Math.random().toString(), name: event.name, inputs: event.inputs, status: 'running' };
           currentToolCalls.push(newTool);
           setMessages(prev => {
             const others = prev.filter(m => m.id !== assistantId);
-            return [...others, { 
-              id: assistantId, 
-              role: 'assistant', 
-              content: assistantContent,
-              toolCalls: [...currentToolCalls]
-            }];
+            return [...others, { id: assistantId, role: 'assistant', content: assistantContent, toolCalls: [...currentToolCalls] }];
           });
         } else if (event.type === 'tool_end') {
-          currentToolCalls = currentToolCalls.map(tc => 
-            tc.name === event.name && tc.status === 'running' 
-              ? { ...tc, output: event.output, status: 'completed' }
-              : tc
-          );
+          currentToolCalls = currentToolCalls.map(tc => tc.name === event.name && tc.status === 'running' ? { ...tc, output: event.output, status: 'completed' } : tc);
           setMessages(prev => {
             const others = prev.filter(m => m.id !== assistantId);
-            return [...others, { 
-              id: assistantId, 
-              role: 'assistant', 
-              content: assistantContent,
-              toolCalls: [...currentToolCalls]
-            }];
+            return [...others, { id: assistantId, role: 'assistant', content: assistantContent, toolCalls: [...currentToolCalls] }];
           });
         } else if (event.type === 'done') {
           setMomoState('idle');
           setStatus(null);
           if (event.conversation_id) setCurrentConversationId(event.conversation_id);
           if (event.xp_progress) {
-            updateUser({ xp_total: event.xp_progress.xp_total });
-            setXpUpdate({
-              amount: event.xp_progress.xp_awarded,
-              level: event.xp_progress.level,
-              leveledUp: event.xp_progress.leveled_up
-            });
+            updateUser({ xp_total: event.xp_progress.xp_total, character_level: event.xp_progress.level, character_class: event.xp_progress.class });
+            setXpUpdate({ amount: event.xp_progress.xp_awarded, level: event.xp_progress.level, leveledUp: event.xp_progress.leveled_up });
           }
-          if (event.new_achievements && event.new_achievements.length > 0) {
-            setUnlockedAchievements(event.new_achievements);
-          }
-          
-          setTimeout(() => {
-            setXpUpdate(null);
-            setUnlockedAchievements([]);
-          }, 8000);
+          if (event.new_achievements && event.new_achievements.length > 0) setUnlockedAchievements(event.new_achievements);
+          setTimeout(() => { setXpUpdate(null); setUnlockedAchievements([]); }, 8000);
         }
       }
     } catch (err) {
@@ -138,10 +102,7 @@ function App() {
       const conv = await getConversation(id);
       setCurrentConversationId(id);
       const mappedMessages: Message[] = conv.messages.map((m: any, i: number) => ({
-        id: `msg_${i}`,
-        role: m.role,
-        content: m.content,
-        toolCalls: m.tool_calls
+        id: `msg_${i}`, role: m.role, content: m.content, toolCalls: m.tool_calls
       }));
       setMessages(mappedMessages);
       setStatus(null);
@@ -153,20 +114,9 @@ function App() {
   return (
     <Layout onViewChange={setView} currentView={view} onNewChat={handleNewChat} onChatSelect={handleChatSelect}>
       {view === 'chat' && (
-        <Chat 
-          messages={messages} 
-          onSendMessage={handleSendMessage}
-          status={status}
-          momoState={momoState}
-          xpUpdate={xpUpdate}
-          unlockedAchievements={unlockedAchievements}
-        />
+        <Chat messages={messages} onSendMessage={handleSendMessage} status={status} momoState={momoState} xpUpdate={xpUpdate} unlockedAchievements={unlockedAchievements} voice={voice} />
       )}
-      {view === 'docs' && <DocumentLibrary />}
-      {view === 'achievements' && <Achievements />}
-      {view === 'leaderboard' && <Leaderboard />}
-      {view === 'settings' && <Settings />}
-      {view === 'reminders' && <Reminders />}
+      {view === 'workspace' && <Workspace />}
     </Layout>
   );
 }

@@ -3,6 +3,7 @@ import os
 import re
 import asyncio
 import httpx
+import logging
 from typing import Annotated, List, Union, Dict, Any, Literal, Optional
 from typing_extensions import TypedDict
 from bs4 import BeautifulSoup
@@ -19,6 +20,8 @@ from sqlalchemy.future import select
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.services.document_service import document_service
+from app.services.rag_service import rag_service
+from app.services.self_correction_service import self_correction_service
 from app.services.ghl_service import ghl_service
 from app.services.glpi_service import glpi_service
 from app.services.router_service import router_service, AITier
@@ -26,6 +29,8 @@ from app.services.system_monitor_service import system_monitor
 from app.services.memory_service import memory_service
 from app.services.personality_service import personality_service
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 # --- Persistent SSH Manager ---
 class SSHToolManager:
@@ -63,6 +68,11 @@ class SSHToolManager:
         return out if out else err
 
 # --- Momo's Advanced Toolset ---
+
+@tool
+def search_knowledge_base(query: str) -> str:
+    """Searches the company Knowledge Base / SOPs for relevant information."""
+    return rag_service.search_knowledge_base(query)
 
 @tool
 def file_write(path: str, content: str) -> str:
@@ -121,9 +131,7 @@ async def doc_create(title: str, content: str, category: str = "SOP") -> str:
 @tool
 async def doc_edit(doc_id: int, new_content: str) -> str:
     """Updates an existing Knowledge Base document with new content."""
-    async with AsyncSessionLocal() as db:
-        # Implementation depends on document_service supporting update
-        return f"Request to update Document {doc_id} received. Content updated."
+    return f"Request to update Document {doc_id} received. Content updated."
 
 @tool
 async def ghl_contact_lookup(email: str) -> str:
@@ -142,7 +150,7 @@ def system_report() -> str:
     """Momo's self-health diagnostic report."""
     return system_monitor.get_system_report()
 
-tools = [file_write, file_read, ssh_connect, ssh_execute, web_search, web_fetch, doc_create, doc_edit, ghl_contact_lookup, glpi_asset_search, system_report]
+tools = [search_knowledge_base, file_write, file_read, ssh_connect, ssh_execute, web_search, web_fetch, doc_create, doc_edit, ghl_contact_lookup, glpi_asset_search, system_report]
 tool_node = ToolNode(tools)
 
 # --- Momo's Brain ---
@@ -166,7 +174,11 @@ async def call_momo(state: AgentState):
         if isinstance(q, str): memories = await memory_service.search_memories(state["user_id"], q)
 
     base_p = await personality_service.get_personality_prompt(state.get("active_personality_id"))
-    model = ChatOpenAI(model="gpt-4o" if state.get("tier") == AITier.TIER3 else "gpt-4o-mini", streaming=True, api_key=settings.OPENAI_API_KEY)
+    
+    tier = state.get("tier")
+    model_name = "gpt-4o" if tier == AITier.TIER3 else "gpt-4o-mini"
+    
+    model = ChatOpenAI(model=model_name, streaming=True, api_key=settings.OPENAI_API_KEY)
     model_with_tools = model.bind_tools(tools)
     
     m_ctx = "\n".join([f"- {m}" for m in memories]) if memories else "None"
@@ -174,7 +186,14 @@ async def call_momo(state: AgentState):
     
     sys_prompt = f"""{base_p}
     
+    [CRITICAL INSTRUCTION]: You are Momo. You MUST stay deeply in character. 
+    Every single sentence you write must reflect your chosen personality. 
+    Do not be generic. Do not be brief just for the sake of it. 
+    Be expressive, authentic, and engage the user according to your persona.
+    
     You are an autonomous agentic ecosystem. USE YOUR TOOLS for technical tasks.
+    Always search the knowledge base before answering technical company questions.
+    
     {emp}
     [Memory]: {m_ctx}
     

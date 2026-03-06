@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { MessageSquare, Plus, Settings as SettingsIcon, LogOut, FileText, Trophy, Award, Bell, Search, X } from 'lucide-react';
+import { MessageSquare, Plus, LogOut, Search, X, LayoutGrid } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { ProgressDashboard } from './ProgressDashboard';
@@ -112,46 +112,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
               ))}
             </div>
           </div>
-
-          <div 
-            onClick={() => onViewChange('reminders')}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'reminders' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
-          >
-            <Bell size={18} />
-            <span className="text-sm font-semibold">Reminders</span>
-          </div>
-
-          <div 
-            onClick={() => onViewChange('docs')}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'docs' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
-          >
-            <FileText size={18} />
-            <span className="text-sm font-semibold">Knowledge Base</span>
-          </div>
-          <div 
-            onClick={() => onViewChange('achievements')}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'achievements' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
-          >
-            <Award size={18} />
-            <span className="text-sm font-semibold">Achievements</span>
-          </div>
-          <div 
-            onClick={() => onViewChange('leaderboard')}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'leaderboard' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
-          >
-            <Trophy size={18} />
-            <span className="text-sm font-semibold">Leaderboard</span>
-          </div>
         </nav>
 
         <div className="mt-auto space-y-1 pt-4 border-t border-[var(--border)]">
+          {/* Replaced Settings with Workspace Hub */}
           <div 
-            onClick={() => onViewChange('settings')}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'settings' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
+            onClick={() => onViewChange('workspace')}
+            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'workspace' || currentView === 'settings' || currentView === 'docs' || currentView === 'achievements' || currentView === 'leaderboard' || currentView === 'reminders' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
           >
-            <SettingsIcon size={18} />
-            <span className="text-sm font-semibold">Settings</span>
+            <LayoutGrid size={18} />
+            <span className="text-sm font-semibold">Workspace</span>
           </div>
+          
           <div 
             onClick={logout}
             className="flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 text-red-500 cursor-pointer transition-colors"
@@ -166,7 +138,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
         <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
              <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-               {dept?.branding?.custom_greeting || 'FITSai-Core v1.9.5'} • {currentView}
+               {dept?.branding?.custom_greeting || 'FITSai-Core v1.9.9'} • {currentView === 'chat' ? 'CHAT' : 'WORKSPACE'}
              </span>
           </div>
           <div className="flex items-center gap-3">

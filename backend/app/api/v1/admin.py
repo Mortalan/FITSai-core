@@ -1,60 +1,49 @@
-import subprocess
-import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Dict, Any
+from sqlalchemy import select, func
+from typing import List
 
 from app.core.database import get_db
-from app.api.v1.auth import get_current_user
 from app.models.user import User
-from app.services.system_monitor_service import system_monitor
+from app.models.budget import DepartmentBudget, ApiUsage
+from app.models.department import Department
+from app.api.v1.auth import get_current_user
 
-logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/stats")
-async def get_system_stats(user: User = Depends(get_current_user)):
-    if not user.is_superuser:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    return {"report": system_monitor.get_system_report()}
-
-@router.post("/service/{service_name}/restart")
-async def restart_service(
-    service_name: str, 
+async def get_system_stats(
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    if not user.is_superuser: raise HTTPException(status_code=403)
     
-    allowed_services = ["momo-backend", "momo-frontend", "felicia-backend", "ollama", "nginx"]
-    if service_name not in allowed_services:
-        raise HTTPException(status_code=400, detail="Invalid service name")
+    user_count = await db.execute(select(func.count(User.id)))
+    dept_count = await db.execute(select(func.count(Department.id)))
+    total_spend = await db.execute(select(func.sum(ApiUsage.cost)))
     
-    try:
-        subprocess.run(["/usr/bin/systemctl", "restart", service_name], check=True)
-        return {"message": f"Service {service_name} restarted successfully"}
-    except Exception as e:
-        logger.error(f"Restart failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Restart failed: {str(e)}")
+    return {
+        "users": user_count.scalar(),
+        "departments": dept_count.scalar(),
+        "total_api_spend": total_spend.scalar() or 0.0
+    }
 
-@router.get("/logs/{service_name}")
-async def get_service_logs(
-    service_name: str, 
-    lines: int = 100,
+@router.get("/budgets")
+async def list_budgets(
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    if not user.is_superuser: raise HTTPException(status_code=403)
     
-    allowed_services = ["momo-backend", "momo-frontend", "felicia-backend", "ollama", "nginx"]
-    if service_name not in allowed_services:
-        raise HTTPException(status_code=400, detail="Invalid service name")
+    result = await db.execute(select(DepartmentBudget))
+    return result.scalars().all()
+
+@router.get("/usage")
+async def list_usage(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    if not user.is_superuser: raise HTTPException(status_code=403)
     
-    try:
-        result = subprocess.run(
-            ["/usr/bin/journalctl", "-u", service_name, "-n", str(lines), "--no-pager"],
-            capture_output=True, text=True, check=True
-        )
-        return {"logs": result.stdout}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Log fetch failed: {str(e)}")
+    result = await db.execute(select(ApiUsage).order_by(ApiUsage.timestamp.desc()).limit(50))
+    return result.scalars().all()

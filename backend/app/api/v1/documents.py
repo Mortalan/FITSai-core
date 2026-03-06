@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
+import io
+import os
+from PyPDF2 import PdfReader
+from docx import Document as DocxDocument
 
 from app.core.database import get_db
 from app.models.document import Document
@@ -42,6 +46,36 @@ async def create_doc(
         db, request.title, request.content, user.id, request.category
     )
     return {"id": doc.id, "title": doc.title}
+
+@router.post("/upload")
+async def upload_doc(
+    file: UploadFile = File(...),
+    category: str = Form("SOP"),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    content = ""
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    
+    try:
+        if file_ext == '.pdf':
+            pdf = PdfReader(io.BytesIO(await file.read()))
+            for page in pdf.pages:
+                content += page.extract_text() + "\n"
+        elif file_ext == '.docx':
+            doc = DocxDocument(io.BytesIO(await file.read()))
+            content = "\n".join([p.text for p in doc.paragraphs])
+        elif file_ext == '.txt':
+            content = (await file.read()).decode('utf-8')
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+            
+        doc = await document_service.create_document(
+            db, file.filename, content, user.id, category
+        )
+        return {"id": doc.id, "title": doc.title, "message": "File uploaded and vectorized"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
 @router.get("/{doc_id}")
 async def get_doc(doc_id: int, db: AsyncSession = Depends(get_db)):
