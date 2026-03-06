@@ -42,10 +42,7 @@ const MessageBubble: React.FC<{ m: Message, conversationId?: number }> = ({ m, c
       <div className={`max-w-[85%] rounded-2xl p-4 relative group ${m.role === 'user' ? 'chat-bubble-user shadow-md' : 'chat-bubble-momo shadow-sm'}`}>
         {m.toolCalls && m.toolCalls.length > 0 && <div className="mb-4">{m.toolCalls.map(tc => <ToolCallCard key={tc.id} tool={tc} />)}</div>}
         <MarkdownRenderer content={m.content} />
-        
-        {/* RAG Context Panel */}
         {m.sources && m.sources.length > 0 && <ContextPanel sources={m.sources} />}
-        
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {m.role === 'assistant' && (
             <>
@@ -92,8 +89,9 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
       <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center py-10 animate-in fade-in zoom-in duration-1000">
-            <div className="mb-10 w-full flex justify-center"><BriefingCard /></div>
-            <h2 className="text-5xl font-bold mb-4 text-[var(--foreground)] tracking-tight">Hello, {user?.name || 'Louis'}</h2>
+            {/* Conditional Debrief Rendering */}
+            {user?.show_briefing && <div className="mb-10 w-full flex justify-center"><BriefingCard /></div>}
+            <h2 className="text-5xl font-black mb-4 text-[var(--foreground)] tracking-tighter">Hello, {user?.name || 'Technician'}</h2>
             <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto">Momo is ready. Use the mic, type below, or press <kbd className="bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-sm mx-1">Ctrl+T</kbd> for templates.</p>
           </div>
         )}
@@ -132,7 +130,7 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
             <button type="button" onClick={voiceState === 'idle' ? startVoice : stopVoice} className={`p-4 rounded-2xl border transition-all shadow-sm ${voiceState === 'listening' ? 'bg-red-500 text-white border-red-600 animate-pulse' : 'bg-[var(--sidebar)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--accent)]'}`}>{voiceState === 'idle' ? <Mic size={24} /> : <Square size={24} />}</button>
           </div>
         </form>
-        <p className="text-[11px] text-center mt-3 text-gray-400 font-bold uppercase tracking-widest opacity-50">Momo v2.0.6 • Source Transparency Active</p>
+        <p className="text-[11px] text-center mt-3 text-gray-400 font-bold uppercase tracking-widest opacity-50">Momo v2.2.0 • Focus Protocol Active</p>
       </div>
     </div>
   );

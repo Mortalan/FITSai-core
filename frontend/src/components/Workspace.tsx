@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, ShieldAlert, Palette, DollarSign, Users, FileText, Award, Trophy, 
-  Bell, Edit2, Save, Smile, BookOpen, Mic, FileCode2, ChevronRight, Zap, Sparkles, Download
+  Bell, Edit2, Save, Smile, BookOpen, Mic, FileCode2, ChevronRight, Zap, Sparkles, Download, Settings
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { GodMode } from './GodMode';
@@ -43,7 +43,7 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
   const handleProfileUpdate = async (fields?: any) => {
     setLoading(true);
     try {
-      const data = fields && fields.active_personality_id ? fields : profileForm;
+      const data = fields ? { ...fields } : profileForm;
       const res = await updateProfile(data);
       updateUser(res.user);
       setSaveStatus('Identity Synced!');
@@ -64,7 +64,7 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
   return (
     <div className="flex h-full font-sans bg-[var(--background)] animate-in fade-in duration-700">
       <div className="w-72 flex-shrink-0 bg-[var(--sidebar)] border-r border-[var(--border)] p-8 overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.8</p></div>
+        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.9</p></div>
         <div className="space-y-8">
           {menuSections.map((section, idx) => (
             <div key={idx}>
@@ -92,19 +92,42 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
                   <div className="flex items-center gap-8"><Avatar size={120} /><div className="space-y-2"><div className="flex items-center gap-3"><h2 className="text-4xl font-black tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div><p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p><p className="text-sm text-gray-500 font-medium">{user?.email}</p></div></div>
                   {saveStatus && <span className="text-green-500 text-xs font-black uppercase tracking-widest animate-bounce">{saveStatus}</span>}
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); handleProfileUpdate(); }} className="space-y-10">
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Display Identity</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none focus:ring-4 focus:ring-[var(--accent)]/10 font-bold" /></div>
-                    <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Active Title</label>
-                      <select value={profileForm.equipped_title} onChange={e => setProfileForm({...profileForm, equipped_title: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none font-bold">
-                        <option value="">No Title Equipped</option>
-                        {user?.titles?.map((t: string) => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                
+                <div className="space-y-12">
+                  <form onSubmit={(e) => { e.preventDefault(); handleProfileUpdate(); }} className="space-y-10">
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Display Identity</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none focus:ring-4 focus:ring-[var(--accent)]/10 font-bold" /></div>
+                      <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Active Title</label>
+                        <select value={profileForm.equipped_title} onChange={e => setProfileForm({...profileForm, equipped_title: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none font-bold">
+                          <option value="">No Title Equipped</option>
+                          {user?.titles?.map((t: string) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-6"><h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2"><Sparkles size={14} className="text-yellow-500" /> Visual Identity Customization</h4><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Avatar Icon</label><input type="text" value={profileForm.avatar_emoji} onChange={e => setProfileForm({...profileForm, avatar_emoji: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 text-center text-2xl" placeholder="e.g. 🤖" /></div><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Aura Color</label><div className="flex gap-2"><input type="color" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="h-[60px] w-20 bg-transparent border-none outline-none cursor-pointer" /><input type="text" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 text-xs font-mono" /></div></div><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Background Effect</label><select value={profileForm.avatar_background} onChange={e => setProfileForm({...profileForm, avatar_background: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 font-bold text-sm"><option value="none">Standard (None)</option><option value="glow">Level 10: Subtle Glow</option><option value="border">Level 20: Tech Border</option><option value="cosmic">Level 40: Cosmic Aura</option></select></div></div></div>
+                    
+                    <div className="flex justify-end pt-4"><button type="submit" disabled={loading} className="bg-[var(--accent)] text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[var(--accent)]/30 hover:scale-105 transition-all">Synchronize Production Identity</button></div>
+                  </form>
+
+                  <div className="pt-10 border-t border-[var(--border)]">
+                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-2"><Settings size={14} className="text-blue-500" /> System Preferences</h4>
+                    <div className="p-8 bg-[var(--input-bg)] border border-[var(--border)] rounded-[32px] flex items-center justify-between group hover:border-[var(--accent)] transition-all">
+                      <div>
+                        <p className="text-lg font-black tracking-tight">Enable Daily Briefing</p>
+                        <p className="text-sm text-gray-500 font-medium">Show the AI-generated debrief card on the chat dashboard.</p>
+                      </div>
+                      <button 
+                        type="button"
+                        disabled={loading}
+                        onClick={() => handleProfileUpdate({ show_briefing: !user?.show_briefing })}
+                        className={`w-16 h-9 rounded-full transition-all relative ${user?.show_briefing ? 'bg-green-500 shadow-lg shadow-green-500/20' : 'bg-gray-300 dark:bg-gray-700'}`}
+                      >
+                        <div className={`absolute top-1 w-7 h-7 bg-white rounded-full transition-all shadow-sm ${user?.show_briefing ? 'left-8' : 'left-1'}`} />
+                      </button>
                     </div>
                   </div>
-                  <div className="space-y-6"><h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2"><Sparkles size={14} className="text-yellow-500" /> Visual Identity Customization</h4><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Avatar Icon</label><input type="text" value={profileForm.avatar_emoji} onChange={e => setProfileForm({...profileForm, avatar_emoji: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 text-center text-2xl" placeholder="e.g. 🤖" /></div><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Aura Color</label><div className="flex gap-2"><input type="color" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="h-[60px] w-20 bg-transparent border-none outline-none cursor-pointer" /><input type="text" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 text-xs font-mono" /></div></div><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Background Effect</label><select value={profileForm.avatar_background} onChange={e => setProfileForm({...profileForm, avatar_background: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 font-bold text-sm"><option value="none">Standard (None)</option><option value="glow">Level 10: Subtle Glow</option><option value="border">Level 20: Tech Border</option><option value="cosmic">Level 40: Cosmic Aura</option></select></div></div></div>
-                  <div className="flex justify-end pt-4"><button type="submit" disabled={loading} className="bg-[var(--accent)] text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[var(--accent)]/30 hover:scale-105 transition-all">Synchronize Production Identity</button></div>
-                </form>
+                </div>
               </div>
             </div>
           )}

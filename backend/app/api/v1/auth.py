@@ -27,6 +27,7 @@ class ProfileUpdate(BaseModel):
     active_personality_id: Optional[int] = None
     equipped_title: Optional[str] = None
     avatar_background: Optional[str] = None
+    show_briefing: Optional[bool] = None
 
 async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
     try:
@@ -46,7 +47,8 @@ async def get_me(user: User = Depends(get_current_user)):
         "character_class": user.character_class, "xp_total": user.xp_total, "character_level": user.character_level,
         "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
         "special_effects": user.special_effects, "avatar_customization": user.avatar_customization,
-        "login_streak": user.login_streak, "unlocked_backgrounds": user.unlocked_backgrounds
+        "login_streak": user.login_streak, "unlocked_backgrounds": user.unlocked_backgrounds,
+        "show_briefing": user.show_briefing, "active_personality_id": user.active_personality_id
     }
 
 @router.post("/login")
@@ -63,7 +65,8 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             "character_class": user.character_class, "xp_total": user.xp_total, "character_level": user.character_level,
             "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
             "special_effects": user.special_effects, "avatar_customization": user.avatar_customization,
-            "login_streak": user.login_streak, "unlocked_backgrounds": user.unlocked_backgrounds
+            "login_streak": user.login_streak, "unlocked_backgrounds": user.unlocked_backgrounds,
+            "show_briefing": user.show_briefing, "active_personality_id": user.active_personality_id
         }
     }
 
@@ -71,6 +74,8 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def update_profile(request: ProfileUpdate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     if request.name: user.name = request.name
     if request.equipped_title: user.equipped_title = request.equipped_title
+    if request.active_personality_id is not None: user.active_personality_id = request.active_personality_id
+    if request.show_briefing is not None: user.show_briefing = request.show_briefing
     
     if request.avatar_emoji or request.avatar_color:
         effects = dict(user.special_effects) if user.special_effects else {}
@@ -83,8 +88,15 @@ async def update_profile(request: ProfileUpdate, db: AsyncSession = Depends(get_
         cust["background"] = request.avatar_background
         user.avatar_customization = cust
         
-    await db.commit(); await db.refresh(user)
-    return {"user": {
-        "id": user.id, "name": user.name, "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
-        "special_effects": user.special_effects, "avatar_customization": user.avatar_customization
-    }}
+    await db.commit()
+    return {
+        "status": "success", 
+        "user": {
+            "id": user.id, "email": user.email, "name": user.name, "is_superuser": user.is_superuser,
+            "character_class": user.character_class, "xp_total": user.xp_total, "character_level": user.character_level,
+            "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
+            "special_effects": user.special_effects, "avatar_customization": user.avatar_customization,
+            "login_streak": user.login_streak, "unlocked_backgrounds": user.unlocked_backgrounds,
+            "show_briefing": user.show_briefing, "active_personality_id": user.active_personality_id
+        }
+    }

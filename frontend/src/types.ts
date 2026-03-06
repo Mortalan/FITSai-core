@@ -44,6 +44,7 @@ export interface User {
   equipped_title?: string | null;
   login_streak: number;
   avatar_customization?: any;
+  show_briefing?: boolean;
 }
 
 export interface Message {
