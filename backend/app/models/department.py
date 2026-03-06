@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from app.core.database import Base
 
 class Department(Base):
@@ -15,6 +16,9 @@ class Department(Base):
         "logo_url": None,
         "custom_greeting": "Hello! I am your department assistant."
     })
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     users = relationship("User", back_populates="department")
 
