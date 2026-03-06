@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import List, Optional
@@ -13,17 +13,20 @@ router = APIRouter()
 @router.get("/summary")
 async def get_summary(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     if not user.is_superuser: raise HTTPException(status_code=403)
-    
-    crit = await db.execute(select(func.count(CodeIssue.id)).where(CodeIssue.severity == "critical", CodeIssue.is_dismissed == False))
-    warn = await db.execute(select(func.count(CodeIssue.id)).where(CodeIssue.severity == "warning", CodeIssue.is_dismissed == False))
-    info = await db.execute(select(func.count(CodeIssue.id)).where(CodeIssue.severity == "info", CodeIssue.is_dismissed == False))
-    
-    return {
-        "critical": crit.scalar(),
-        "warning": warn.scalar(),
-        "info": info.scalar(),
-        "total": (crit.scalar() or 0) + (warn.scalar() or 0) + (info.scalar() or 0)
-    }
+    try:
+        crit_res = await db.execute(select(func.count(CodeIssue.id)).where(CodeIssue.severity == "critical", CodeIssue.is_dismissed == False))
+        warn_res = await db.execute(select(func.count(CodeIssue.id)).where(CodeIssue.severity == "warning", CodeIssue.is_dismissed == False))
+        info_res = await db.execute(select(func.count(CodeIssue.id)).where(CodeIssue.severity == "info", CodeIssue.is_dismissed == False))
+        
+        c = crit_res.scalar() or 0
+        w = warn_res.scalar() or 0
+        i = info_res.scalar() or 0
+        
+        return {"critical": c, "warning": w, "info": i, "total": c + w + i}
+    except Exception as e:
+        import logging
+        logging.error(f"Summary failed: {e}")
+        return {"critical": 0, "warning": 0, "info": 0, "total": 0}
 
 @router.get("/issues")
 async def list_issues(severity: Optional[str] = None, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
