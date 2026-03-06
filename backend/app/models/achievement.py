@@ -12,6 +12,7 @@ class Achievement(Base):
     icon = Column(String) # Lucide icon name
     xp_reward = Column(Integer, default=50)
     title_reward = Column(String, nullable=True)
+    is_hidden = Column(Boolean, default=False)
 
 class UserAchievement(Base):
     __tablename__ = "user_achievements"

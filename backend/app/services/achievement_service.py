@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from app.models.achievement import Achievement, UserAchievement
 from app.models.user import User
 from app.services.gamification_service import gamification_service
@@ -10,12 +10,14 @@ logger = logging.getLogger(__name__)
 
 class AchievementService:
     async def get_user_achievements(self, db: AsyncSession, user_id: int) -> List[dict]:
+        # Filter: Only show non-hidden achievements OR those the user has already unlocked
         res = await db.execute(
             select(Achievement, UserAchievement)
-            .join(UserAchievement, Achievement.id == UserAchievement.achievement_id)
-            .where(UserAchievement.user_id == user_id)
+            .outerjoin(UserAchievement, (Achievement.id == UserAchievement.achievement_id) & (UserAchievement.user_id == user_id))
+            .where(or_(Achievement.is_hidden == False, UserAchievement.id != None))
+            .order_by(Achievement.id)
         )
-        return [{"id": a.id, "name": a.name, "description": a.description, "rarity": a.rarity, "icon": a.icon, "unlocked_at": ua.unlocked_at} for a, ua in res.all()]
+        return [{"id": a.id, "name": a.name, "description": a.description, "rarity": a.rarity, "icon": a.icon, "unlocked": ua is not None, "unlocked_at": ua.unlocked_at if ua else None, "is_claimed": True} for a, ua in res.all()]
 
     async def check_achievements(self, db: AsyncSession, user: User, event_type: str, context: dict) -> list:
         unlocked = []

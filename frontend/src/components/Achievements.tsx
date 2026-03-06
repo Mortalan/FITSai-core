@@ -65,6 +65,20 @@ export const Achievements: React.FC = () => {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Achievements</h1>
         <p className="text-gray-500 font-medium">Unlock badges and earn XP by mastering the Momo ecosystem.</p>
+        {!isLoading && achievements.length > 0 && (
+          <div className="pt-4">
+            <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
+              <span>Overall Progress</span>
+              <span className="text-[var(--accent)]">{achievements.filter(a => a.unlocked).length} / {achievements.length} Unlocked</span>
+            </div>
+            <div className="h-2 w-full bg-[var(--input-bg)] rounded-full overflow-hidden border border-[var(--border)]">
+              <div 
+                className="h-full bg-[var(--accent)] transition-all duration-1000" 
+                style={{ width: `${(achievements.filter(a => a.unlocked).length / achievements.length) * 100}%` }} 
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

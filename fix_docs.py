@@ -19,7 +19,7 @@ def fix():
         filename = row[1]
         category = 'SOP'
         if any(x in filename.upper() for x in ['FAQ', 'GUIDE', 'CAPABILITIES', 'MODES']):
-            category = 'GUIDE'
+            category = 'GOD_MODE'
             
         cur.execute("""
             INSERT INTO documents (id, title, created_by, department_id, category, created_at)

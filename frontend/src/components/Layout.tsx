@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { Avatar } from './Avatar';
 import { getChatHistory } from '../api';
+import { getXPProgress } from '../utils/xp';
 import type { AppView } from '../types';
 import type { Department } from '../types';
 
@@ -48,9 +49,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
   // Calculate XP Progress for Header
   const progress = useMemo(() => {
     if (!user) return 0;
-    const currentLevelXP = Math.pow(user.character_level - 1, 2) * 100;
-    const nextLevelXP = Math.pow(user.character_level, 2) * 100;
-    return user.character_level === 50 ? 100 : ((user.xp_total - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+    return getXPProgress(user.character_level, user.xp_total);
   }, [user]);
 
   return (

@@ -13,15 +13,16 @@ interface Document {
   id: any; title: string; category: string; updated_at?: string; content?: string; filename?: string;
 }
 
-export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB' }> = ({ type }) => {
+export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB', forceCategory?: string }> = ({ type, forceCategory }) => {
   const [docs, setDocs] = useState<Document[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [search, setSearch] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const token = useAuthStore((state) => state.token);
 
-  useEffect(() => { fetchDocs(); }, [type]);
+  useEffect(() => { fetchDocs(); }, [type, forceCategory]);
 
   const fetchDocs = async () => {
     setIsLoading(true);
@@ -31,9 +32,30 @@ export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB' }> = ({ type }) => {
         setDocs(resp.data.filter((d: any) => d.category === 'SOP'));
       } else {
         const resp = await axios.get(`${LIBRARY_BASE_URL}/`, { headers: { Authorization: `Bearer ${token}` } });
-        setDocs(resp.data);
+        let data = resp.data;
+        if (forceCategory) data = data.filter((d: any) => d.category === forceCategory);
+        else data = data.filter((d: any) => d.category !== 'GOD_MODE');
+        setDocs(data);
       }
     } catch (err) { console.error(err); } finally { setIsLoading(false); }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', file.name);
+    formData.append('category', forceCategory || (type === 'SOP' ? 'SOP' : 'General'));
+    
+    try {
+      const url = type === 'SOP' ? `${API_BASE_URL}/upload` : `${LIBRARY_BASE_URL}/upload`;
+      await axios.post(url, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      fetchDocs();
+    } catch (err) { alert('Upload failed'); }
   };
 
   const handleDownload = (filename: string) => {
@@ -46,8 +68,12 @@ export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB' }> = ({ type }) => {
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex items-center justify-between bg-[var(--sidebar)] p-10 border border-[var(--border)] rounded-[40px] shadow-sm">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter">{type === 'SOP' ? 'Technical SOPs' : 'File Library'}</h1>
-          <p className="text-gray-500 font-medium mt-2">{type === 'SOP' ? 'Verified Standard Operating Procedures.' : 'Manuals, drivers, and reference documents.'}</p>
+          <h1 className="text-4xl font-black tracking-tighter">{forceCategory === 'GOD_MODE' ? 'System Documents' : type === 'SOP' ? 'Technical SOPs' : 'File Library'}</h1>
+          <p className="text-gray-500 font-medium mt-2">{forceCategory === 'GOD_MODE' ? 'Internal architecture and system design guides.' : type === 'SOP' ? 'Verified Standard Operating Procedures.' : 'Manuals, drivers, and reference documents.'}</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".pdf,.docx,.txt" className="hidden" />
+          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-[var(--accent)] text-white px-6 py-3.5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-[var(--accent)]/30 hover:opacity-90 transition-all"><UploadCloud size={18} /> Ingest Document</button>
         </div>
       </div>
 
@@ -67,7 +93,7 @@ export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB' }> = ({ type }) => {
                 </div>
                 <h3 className="text-xl font-black leading-tight">{doc.title}</h3>
                 <div className="mt-auto pt-4 border-t border-[var(--border)]">
-                   <span className="text-[10px] text-gray-400 font-black uppercase">{type === 'KB' ? `FILE: ${doc.filename}` : `UPDATED: ${new Date(doc.updated_at || '').toLocaleDateString()}`}</span>
+                   <span className="text-[10px] text-gray-400 font-black uppercase">{type === 'KB' && doc.filename ? `FILE: ${doc.filename}` : `UPDATED: ${new Date(doc.updated_at || Date.now()).toLocaleDateString()}`}</span>
                 </div>
               </div>
             </div>

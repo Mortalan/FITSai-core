@@ -26,6 +26,12 @@ export const BudgetMaster: React.FC = () => {
     }).finally(() => setLoading(false));
   }, [token]);
 
+  const getDaysInMonthLeft = () => {
+    const today = new Date();
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    return lastDay.getDate() - today.getDate();
+  };
+
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-[var(--accent)]" /></div>;
 
   return (
@@ -50,7 +56,7 @@ export const BudgetMaster: React.FC = () => {
         <div className="p-6 bg-[var(--sidebar)] border border-[var(--border)] rounded-3xl shadow-sm">
           <Clock size={24} className="text-purple-500 mb-4" />
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Cycle</p>
-          <h3 className="text-4xl font-bold text-[var(--foreground)] mt-1">25</h3>
+          <h3 className="text-4xl font-bold text-[var(--foreground)] mt-1">{getDaysInMonthLeft()}</h3>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-4">Days remaining</p>
         </div>
       </div>

@@ -28,7 +28,7 @@ export const Avatar: React.FC<{ state?: 'idle' | 'thinking' | 'speaking', size?:
       style={{ width: size, height: size, borderColor: customColor, backgroundColor: `${customColor}10` }}
     >
       <AvatarParticles charClass={charClass} level={level} size={size} />
-      {customEmoji ? <span style={{ fontSize: size * 0.6 }} className="z-10">{customEmoji}</span> : <img src="/assets/avfel2.png" className={`w-full h-full object-cover z-10 ${state === 'speaking' ? 'animate-bounce' : ''}`} />}
+      {customEmoji ? <span style={{ fontSize: size * 0.6 }} className="z-10">{customEmoji}</span> : <img src={`/avatars/${charClass.toLowerCase()}.png`} onError={(e) => { e.currentTarget.src = '/assets/avfel2.png'; }} className={`w-full h-full object-cover z-10 ${state === 'speaking' ? 'animate-bounce' : ''}`} />}
       {state === 'thinking' && <div className="absolute inset-0 bg-blue-500/10 animate-ping z-0" />}
     </div>
   );

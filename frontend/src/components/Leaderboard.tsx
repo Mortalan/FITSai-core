@@ -45,7 +45,10 @@ export const Leaderboard: React.FC = () => {
                 <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-bold text-xl">{u.name?.[0]}</div>
                 <div>
                   <h4 className="font-bold">{u.name}</h4>
-                  <p className="text-xs text-gray-500 uppercase font-bold tracking-tighter">{u.character_class} • Level {u.character_level}</p>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-tighter">
+                    {u.character_class} • Level {u.character_level}
+                    {u.equipped_title ? ` • ${u.equipped_title}` : ''}
+                  </p>
                 </div>
               </div>
               <div className="text-right">

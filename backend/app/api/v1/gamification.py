@@ -20,7 +20,8 @@ async def get_leaderboard(db: AsyncSession = Depends(get_db)):
         "name": u.name,
         "xp_total": u.xp_total,
         "character_level": u.character_level,
-        "character_class": u.character_class
+        "character_class": u.character_class,
+        "equipped_title": u.equipped_title
     } for u in users]
 
 @router.get("/achievements")

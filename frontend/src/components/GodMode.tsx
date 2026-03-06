@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
   Server, Activity, RefreshCw, List, ShieldAlert, Loader2, Cpu, 
   Map, MessageSquare, Terminal as TerminalIcon, FileCode, Users, 
-  Brain, DollarSign, FileText, Crown, Download, ChevronLeft
+  Brain, DollarSign, FileText, Crown, ChevronLeft, Image
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { RoadmapPanel } from './godmode/RoadmapPanel';
@@ -13,10 +13,10 @@ import { UserManagement } from './godmode/UserManagement';
 import { ModelEvolution } from './godmode/ModelEvolution';
 import { CorrectionPanel } from './godmode/CorrectionPanel';
 import { BudgetMaster } from './godmode/BudgetMaster';
-import { DocsPanel } from './godmode/DocsPanel';
 import { ChampionPanel } from './godmode/ChampionPanel';
-import { CLIDownloads } from './godmode/CLIDownloads';
 import { HealthAlertsPanel } from './godmode/HealthAlertsPanel';
+import { DocumentLibrary } from './Documents';
+import { AssetManager } from './godmode/AssetManager';
 
 const API_BASE_URL = 'http://10.0.0.231:9000/api/v1/admin';
 
@@ -34,14 +34,14 @@ export const GodMode: React.FC = () => {
     { id: 'alerts', name: 'Health Alerts', icon: ShieldAlert, color: 'bg-red-500', desc: 'CPU, RAM, and Disk monitoring' },
     { id: 'budget', name: 'API Budgets', icon: DollarSign, color: 'bg-green-500', desc: 'Cost tracking and limits' },
     { id: 'users', name: 'User Directory', icon: Users, color: 'bg-purple-500', desc: 'Account provisioning' },
-    { id: 'docs', name: 'Knowledge Base', icon: FileText, color: 'bg-orange-500', desc: 'RAG Ingestion health' },
+    { id: 'assets', name: 'Asset Manager', icon: Image, color: 'bg-yellow-600', desc: 'Upload class avatars' },
+    { id: 'docs', name: 'System Docs', icon: FileText, color: 'bg-orange-500', desc: 'Internal arch documentation' },
     { id: 'code', name: 'Code Auditor', icon: FileCode, color: 'bg-cyan-500', desc: 'Security and technical debt' },
-    { id: 'evolution', name: 'Model Strategy', icon: Cpu, color: 'bg-indigo-500', desc: 'Evolution state and VRAM' },
+    { id: 'evolution', name: 'Model Strategy', icon: Cpu, color: 'bg-indigo-500', desc: 'Evolution state and coding model' },
     { id: 'correction', name: 'Self-Learning', icon: Brain, color: 'bg-pink-500', desc: 'Background accuracy metrics' },
     { id: 'champion', name: 'Monthly Award', icon: Crown, color: 'bg-yellow-500', desc: 'XP Audit and Hall of Fame' },
-    { id: 'cli', name: 'CLI Tools', icon: Download, color: 'bg-gray-500', desc: 'Terminal automation binaries' },
-    { id: 'roadmap', name: 'System Roadmap', icon: Map, color: 'bg-emerald-500', desc: 'Feature development tracker' },
-    { id: 'suggestions', name: 'User Feedback', icon: MessageSquare, color: 'bg-rose-500', desc: 'Suggestion and status loop' },
+    { id: 'roadmap', name: 'System Roadmap', icon: Map, color: 'bg-emerald-500', desc: 'Feature tracker' },
+    { id: 'suggestions', name: 'User Feedback', icon: MessageSquare, color: 'bg-rose-500', desc: 'Suggestion loop' },
   ];
 
   const services = [{ id: 'momo-backend', name: 'Momo Backend' }, { id: 'momo-frontend', name: 'Momo Frontend' }, { id: 'ollama', name: 'Ollama AI' }, { id: 'nginx', name: 'Nginx' }, { id: 'felicia-backend', name: 'Legacy Core' }];
@@ -67,14 +67,13 @@ export const GodMode: React.FC = () => {
   const restartService = async (service: string) => {
     if (!window.confirm(`Restart ${service}?`)) return;
     setIsActionLoading(true);
-    try { await axios.post(`${API_BASE_URL}/service/${service}/restart`, {}, { headers: { Authorization: `Bearer ${token}` } }); } catch (err) {} finally { setIsActionLoading(false); }
+    try { await axios.post(`${API_BASE_URL}/service/${service}/restart`, {}, { headers: { Authorization: `Bearer ${token}` } }); alert('Restart initiated'); } catch (err) {} finally { setIsActionLoading(false); }
   };
 
   if (activeTab) {
     return (
       <div className="space-y-8 animate-in slide-in-from-bottom-2 duration-300">
         <button onClick={() => setActiveTab(null)} className="flex items-center gap-2 text-gray-500 hover:text-[var(--foreground)] font-bold transition-all bg-[var(--input-bg)] px-4 py-2 rounded-xl mb-4"><ChevronLeft size={18} /> Back to Dashboard</button>
-        
         {activeTab === 'system' && (
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-in fade-in duration-300">
             <div className="xl:col-span-1 space-y-8">
@@ -93,7 +92,7 @@ export const GodMode: React.FC = () => {
                   <div className="flex items-center gap-3"><TerminalIcon size={16} className="text-green-500" /><span className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Terminal • {selectedService}</span></div>
                   <button onClick={() => fetchLogs(selectedService)} className="text-gray-500 hover:text-green-500 transition-colors"><RefreshCw size={14} /></button>
                 </div>
-                <div className="flex-1 p-8 overflow-y-auto custom-scrollbar font-mono text-[13px] leading-relaxed text-green-500/90"><pre className="whitespace-pre-wrap">{logs || `Momo Control v2.1.6\nSelect a service to stream journals...\n\nReady.`}</pre></div>
+                <div className="flex-1 p-8 overflow-y-auto custom-scrollbar font-mono text-[13px] leading-relaxed text-green-500/90"><pre className="whitespace-pre-wrap">{logs || `Momo Control v2.1.7\nSelect a service to stream journals...\n\nReady.`}</pre></div>
               </div>
             </div>
           </div>
@@ -101,12 +100,12 @@ export const GodMode: React.FC = () => {
         {activeTab === 'alerts' && <HealthAlertsPanel />}
         {activeTab === 'budget' && <BudgetMaster />}
         {activeTab === 'users' && <UserManagement />}
-        {activeTab === 'docs' && <DocsPanel />}
+        {activeTab === 'assets' && <AssetManager />}
+        {activeTab === 'docs' && <DocumentLibrary type="KB" forceCategory="GOD_MODE" />}
         {activeTab === 'code' && <CodeHealthPanel />}
         {activeTab === 'evolution' && <ModelEvolution />}
         {activeTab === 'correction' && <CorrectionPanel />}
         {activeTab === 'champion' && <ChampionPanel />}
-        {activeTab === 'cli' && <CLIDownloads />}
         {activeTab === 'roadmap' && <RoadmapPanel />}
         {activeTab === 'suggestions' && <SuggestionsPanel />}
       </div>
@@ -117,16 +116,11 @@ export const GodMode: React.FC = () => {
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex items-center gap-6">
         <div className="p-4 bg-red-500 text-white rounded-[24px] shadow-xl shadow-red-500/20"><ShieldAlert size={40} /></div>
-        <div><h1 className="text-4xl font-black tracking-tighter uppercase">God Mode</h1><p className="text-gray-500 font-bold uppercase text-xs tracking-widest mt-1">Master Control Center</p></div>
+        <div><h1 className="text-4xl font-black tracking-tighter uppercase">God Mode</h1><p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest mt-1">Master Control Center</p></div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {adminApps.map(app => (
-          <button 
-            key={app.id} 
-            onClick={() => setActiveTab(app.id)}
-            className="group p-8 bg-[var(--sidebar)] border border-[var(--border)] rounded-[32px] hover:border-[var(--accent)] transition-all text-left shadow-sm hover:shadow-xl relative overflow-hidden"
-          >
+          <button key={app.id} onClick={() => setActiveTab(app.id)} className="group p-8 bg-[var(--sidebar)] border border-[var(--border)] rounded-[32px] hover:border-[var(--accent)] transition-all text-left shadow-sm hover:shadow-xl relative overflow-hidden">
             <div className={`w-12 h-12 ${app.color} text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
               <app.icon size={24} />
             </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuthStore } from '../store/authStore';
 import { Zap, Shield, Brain, Star, Flame, Trophy, Sparkles, Swords, BookOpen, Heart } from 'lucide-react';
+import { getXPProgress } from '../utils/xp';
 
 export const ProgressDashboard: React.FC = () => {
   const user = useAuthStore((state) => state.user);
@@ -10,9 +11,7 @@ export const ProgressDashboard: React.FC = () => {
   const xpTotal = user.xp_total ?? 0;
   const streak = user.login_streak ?? 0;
 
-  const currentLevelXP = Math.pow(charLevel - 1, 2) * 100;
-  const nextLevelXP = Math.pow(charLevel, 2) * 100;
-  const progress = charLevel === 50 ? 100 : ((xpTotal - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+  const progress = getXPProgress(charLevel, xpTotal);
 
   const stats = user.stats || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 

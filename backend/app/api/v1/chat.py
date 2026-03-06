@@ -18,7 +18,6 @@ from app.services.budget_service import budget_service
 from app.services.memory_service import memory_service
 from app.services.memory_extraction import memory_extractor
 from app.services.contextual_service import contextual_service
-from app.services.reminder_service import reminder_service
 from app.services.personality_service import personality_service
 from app.api.v1.auth import get_current_user
 from app.core.database import get_db, AsyncSessionLocal
@@ -52,24 +51,17 @@ async def submit_feedback(data: FeedbackRequest, db: AsyncSession = Depends(get_
     await db.execute(stmt); await db.commit()
     if data.feedback == "thumbs_down":
         from app.services.self_correction_service import self_correction_service
-        from app.services.self_learning_logger import self_learning_logger
         conv = await conversation_service.get_conversation(db, data.conversation_id, user.id)
         if conv and len(conv.messages) >= 2:
             q, a = conv.messages[-2]['content'], conv.messages[-1]['content']
             await self_correction_service.grade_response(q, a, user.id)
-            # await self_learning_logger.log_negative_feedback(q, "", a, {"conversation_id": data.conversation_id})
     return {"status": "success"}
-
-async def extract_and_store_memory(user_id: int, question: str, answer: str):
-    facts = await memory_extractor.extract_facts(question, answer)
-    for fact in facts: await memory_service.store_memory(user_id, fact)
 
 @router.post("/stream")
 async def stream_momo(request: Request, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
     body = await request.json()
     question, conv_id = body.get("question"), body.get("conversation_id")
     project_id = body.get("project_id")
-    image_data, image_mime = body.get("image_data"), body.get("image_mime", "image/png")
     
     async with AsyncSessionLocal() as db:
         if not await budget_service.check_budget(db, current_user.department_id):
@@ -84,7 +76,7 @@ async def stream_momo(request: Request, background_tasks: BackgroundTasks, curre
             s = Suggestion(user_id=current_user.id, content=suggestion_text)
             db.add(s); await db.commit()
 
-    tier = AITier.TIER3 if image_data else router_service.classify(question)
+    tier = router_service.classify(question)
 
     async def event_generator():
         async with AsyncSessionLocal() as db:
@@ -101,13 +93,29 @@ async def stream_momo(request: Request, background_tasks: BackgroundTasks, curre
             yield f"event: done\ndata: {json.dumps({'status': 'finished', 'source': 'Tier1', 'conversation_id': current_conv_id})}\n\n"
             return
 
+        if tier in [AITier.TIER2, AITier.TIER2_CODE]:
+            try:
+                base_p = await personality_service.get_personality_prompt(current_user.active_personality_id)
+                sys_prompt = f"{base_p}\n{empathy_injection}"
+                use_code = (tier == AITier.TIER2_CODE)
+                ans = await local_llm_service.generate_response(sys_prompt, question, use_code_model=use_code)
+                async with AsyncSessionLocal() as db:
+                    await conversation_service.add_message(db, current_conv_id, current_user.id, "assistant", ans)
+                    user_res = await db.execute(select(User).where(User.id == current_user.id))
+                    user = user_res.scalar_one()
+                    progress = await gamification_service.award_xp(db, user, 5)
+                yield f"event: token\ndata: {json.dumps({'content': ans})}\n\n"
+                yield f"event: done\ndata: {json.dumps({'status': 'finished', 'source': f'Local ({"Code" if use_code else "Chat"})', 'xp_progress': progress, 'conversation_id': current_conv_id})}\n\n"
+                return
+            except Exception: tier = AITier.TIER3
+
+        # Tier 3 Agentic Loop
         async with AsyncSessionLocal() as db:
             conv = await conversation_service.get_conversation(db, current_conv_id, current_user.id)
             lc_messages = [HumanMessage(content=m['content']) if m['role'] == 'user' else AIMessage(content=m['content']) for m in conv.messages]
 
         initial_state = {"messages": lc_messages, "tier": tier, "user_id": current_user.id, "empathy_injection": empathy_injection, "active_personality_id": current_user.active_personality_id}
-        if project_id: initial_state["project_id"] = project_id
-
+        
         tool_count, full_answer, tokens_input, tokens_output, sources_used = 0, "", 0, 0, []
         async for event in momo_engine.astream_events(initial_state, version="v2"):
             kind = event["event"]
@@ -127,9 +135,6 @@ async def stream_momo(request: Request, background_tasks: BackgroundTasks, curre
                     await conversation_service.add_message(db, current_conv_id, current_user.id, "assistant", full_answer)
                     user_result = await db.execute(select(User).where(User.id == current_user.id)); user = user_result.scalar_one()
                     progress = await gamification_service.award_xp(db, user, 10 + (tool_count * 20))
-                    background_tasks.add_task(extract_and_store_memory, current_user.id, question, full_answer)
-                    from app.services.self_correction_service import self_correction_service
-                    background_tasks.add_task(self_correction_service.grade_response, question, full_answer, current_user.id)
                     yield f"event: done\ndata: {json.dumps({'status': 'finished', 'source': 'Cloud AI', 'xp_progress': progress, 'conversation_id': current_conv_id, 'sources': list(set(sources_used))})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
