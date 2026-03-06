@@ -38,31 +38,31 @@ async def get_system_stats(db: AsyncSession = Depends(get_db), user: User = Depe
         "departments": dept_count.scalar(),
         "total_api_spend": total_spend.scalar() or 0.0,
         "total_scans": scan_count.scalar() or 0,
-        "report": system_monitor.get_system_report(),
-        "knowledge_base": f"{len(docs) if 'docs' in locals() else 0} Documents Indexed"
+        "report": system_monitor.get_system_report()
     }
+
+@router.get("/budgets")
+async def list_budgets(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    if not user.is_superuser: raise HTTPException(status_code=403)
+    result = await db.execute(select(DepartmentBudget))
+    return result.scalars().all()
+
+@router.get("/usage")
+async def list_usage(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    if not user.is_superuser: raise HTTPException(status_code=403)
+    result = await db.execute(select(ApiUsage).order_by(ApiUsage.timestamp.desc()).limit(50))
+    return result.scalars().all()
 
 @router.get("/health/alerts")
 async def get_health_alerts(user: User = Depends(get_current_user)):
     if not user.is_superuser: raise HTTPException(status_code=403)
-    # Real hardware monitoring
     cpu_usage = psutil.cpu_percent(interval=1)
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
-    
     alerts = []
     if cpu_usage > 85: alerts.append({"id": 1, "severity": "warning", "message": f"High CPU Load: {cpu_usage}%", "component": "CPU"})
     if memory.percent > 90: alerts.append({"id": 2, "severity": "critical", "message": "System RAM critical level", "component": "Memory"})
-    
-    return {
-        "metrics": {
-            "cpu": cpu_usage,
-            "ram": memory.percent,
-            "disk": disk.percent,
-            "uptime": "14 Days"
-        },
-        "alerts": alerts
-    }
+    return { "metrics": { "cpu": cpu_usage, "ram": memory.percent, "disk": disk.percent, "uptime": "14 Days" }, "alerts": alerts }
 
 @router.get("/budget/history")
 async def get_budget_history(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):

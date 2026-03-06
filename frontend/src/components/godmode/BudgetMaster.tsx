@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, BarChart3, Users, Clock, Loader2, TrendingUp, AlertTriangle, User } from 'lucide-react';
+import { DollarSign, BarChart3, Users, Clock, Loader2, TrendingUp, AlertTriangle, User, Activity } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../../store/authStore';
 
