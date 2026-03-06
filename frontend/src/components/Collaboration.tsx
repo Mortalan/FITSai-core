@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Users, Plus, MessageSquare, Loader2, UserPlus, FolderKanban, Sparkles, ArrowLeft, Send } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import { Chat } from './Chat';
 
 const API_BASE_URL = 'http://10.0.0.231:9000/api/v1/projects';
 
-export const Collaboration: React.FC = () => {
+export const Collaboration: React.FC<{ onInitProjectChat: (projectId: number) => void }> = ({ onInitProjectChat }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +50,7 @@ export const Collaboration: React.FC = () => {
             <MessageSquare size={48} className="mx-auto text-gray-300" />
             <h4 className="text-lg font-bold">Project Stream</h4>
             <p className="text-sm text-gray-500 max-w-md mx-auto">This is a shared project workstream. Conversations here are visible to all project members and maintain shared context.</p>
-            <button className="bg-[var(--accent)] text-white px-6 py-2 rounded-xl font-bold text-sm shadow-lg">Initialize Project Chat</button>
+            <button onClick={() => onInitProjectChat(selectedProject.id)} className="bg-[var(--accent)] text-white px-6 py-2 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 transition-all">Initialize Project Chat</button>
           </div>
         </div>
       </div>
@@ -85,7 +84,7 @@ export const Collaboration: React.FC = () => {
         </form>
       )}
 
-      <div className="bg-blue-500/5 border border-blue-500/20 p-6 rounded-3xl mb-6">
+      <div className="bg-blue-500/5 border border-blue-500/20 p-6 rounded-2xl mb-6">
         <h4 className="font-bold text-blue-600 mb-2 flex items-center gap-2"><Sparkles size={16} /> Peer Linking Active</h4>
         <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">Momo automatically suggests reaching out to specific peers who have demonstrated expertise in technical domains identified during project analysis.</p>
       </div>

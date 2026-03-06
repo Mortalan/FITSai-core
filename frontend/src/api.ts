@@ -2,12 +2,12 @@ import { useAuthStore } from './store/authStore';
 
 const API_BASE_URL = 'http://10.0.0.231:9000/api/v1';
 
-export async function* streamMomo(question: string, conversationId?: number, imageData?: string) {
+export async function* streamMomo(question: string, conversationId?: number, imageData?: string, projectId?: number) {
   const token = useAuthStore.getState().token;
   const response = await fetch(`${API_BASE_URL}/chat/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({ question, conversation_id: conversationId, image_data: imageData }),
+    body: JSON.stringify({ question, conversation_id: conversationId, image_data: imageData, project_id: projectId }),
   });
   if (response.status === 401) { useAuthStore.getState().logout(); throw new Error('Session expired'); }
   if (!response.ok) throw new Error('Failed to connect to Momo');

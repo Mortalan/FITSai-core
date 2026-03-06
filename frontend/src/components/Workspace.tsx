@@ -16,7 +16,7 @@ import { MeetingTranscription } from './godmode/MeetingTranscription';
 import { listPersonalities, updateProfile } from '../api';
 import { Lock, CheckCircle2 } from 'lucide-react';
 
-export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'profile' }) => {
+export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid: number) => void }> = ({ defaultTab = 'profile', onInitProjectChat }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
@@ -60,7 +60,7 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
   return (
     <div className="flex h-full font-sans bg-[var(--background)] animate-in fade-in duration-700">
       <div className="w-72 bg-[var(--sidebar)] border-r border-[var(--border)] p-8 overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.4</p></div>
+        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.5</p></div>
         <div className="space-y-8">
           {menuSections.map((section, idx) => (
             <div key={idx}>
@@ -116,7 +116,7 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
           {activeTab === 'achievements' && <Achievements />}
           {activeTab === 'leaderboard' && <Leaderboard />}
           {activeTab === 'reminders' && <Reminders />}
-          {activeTab === 'collaboration' && <Collaboration />}
+          {activeTab === 'collaboration' && <Collaboration onInitProjectChat={onInitProjectChat} />}
           {activeTab === 'admin' && <GodMode />}
         </div>
       </div>

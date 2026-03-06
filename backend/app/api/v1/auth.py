@@ -70,3 +70,13 @@ async def update_profile(request: ProfileUpdate, db: AsyncSession = Depends(get_
         "id": user.id, "name": user.name, "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
         "special_effects": user.special_effects, "avatar_customization": user.avatar_customization
     }}
+
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    return {
+        "id": user.id, "email": user.email, "name": user.name, "is_superuser": user.is_superuser,
+        "character_class": user.character_class, "xp_total": user.xp_total, "character_level": user.character_level,
+        "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
+        "special_effects": user.special_effects, "avatar_customization": user.avatar_customization,
+        "login_streak": user.login_streak
+    }

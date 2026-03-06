@@ -10,6 +10,15 @@ export interface ToolCall {
   status: 'running' | 'completed' | 'error';
 }
 
+export interface UserStats {
+  str: number;
+  dex: number;
+  con: number;
+  int: number;
+  wis: number;
+  cha: number;
+}
+
 export interface Department {
   id: number;
   name: string;
@@ -30,10 +39,11 @@ export interface User {
   is_superuser: boolean;
   active_personality_id?: number | null;
   special_effects?: any;
-  stats?: any;
+  stats?: UserStats;
+  titles?: string[];
+  equipped_title?: string | null;
   login_streak: number;
-  department_id?: number | null;
-  department?: Department | null;
+  avatar_customization?: any;
 }
 
 export interface Message {
@@ -43,10 +53,4 @@ export interface Message {
   status?: string;
   toolCalls?: ToolCall[];
   sources?: string[];
-}
-
-export interface ChatState {
-  messages: Message[];
-  isProcessing: boolean;
-  error: string | null;
 }
