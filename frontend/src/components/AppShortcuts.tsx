@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
-import { AppView } from '../types';
+import type { AppView } from '../types';
 
 interface AppShortcutsProps {
   onViewChange: (view: AppView) => void;

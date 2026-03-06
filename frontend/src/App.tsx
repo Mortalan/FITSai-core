@@ -8,7 +8,6 @@ import { AppShortcuts } from './components/AppShortcuts';
 import { streamMomo, getConversation } from './api';
 import useVoice from './hooks/useVoice';
 import type { Message, ToolCall, AppView } from './types';
-export type { AppView } from "./types";
 
 function App() {
   const token = useAuthStore((state) => state.token);

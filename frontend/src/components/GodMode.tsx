@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Server, Activity, RefreshCw, List, ShieldAlert, Loader2, Cpu, Map, MessageSquare, Terminal as TerminalIcon, FileCode, Users, Brain, Mic, DollarSign } from 'lucide-react';
+import { Server, Activity, RefreshCw, List, ShieldAlert, Loader2, Cpu, Map, MessageSquare, Terminal as TerminalIcon, FileCode, Users, Brain, Mic, DollarSign, FileText, Crown, Download } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { RoadmapPanel } from './godmode/RoadmapPanel';
 import { SuggestionsPanel } from './godmode/SuggestionsPanel';
@@ -10,11 +10,14 @@ import { ModelEvolution } from './godmode/ModelEvolution';
 import { CorrectionPanel } from './godmode/CorrectionPanel';
 import { MeetingTranscription } from './godmode/MeetingTranscription';
 import { BudgetMaster } from './godmode/BudgetMaster';
+import { DocsPanel } from './godmode/DocsPanel';
+import { ChampionPanel } from './godmode/ChampionPanel';
+import { CLIDownloads } from './godmode/CLIDownloads';
 
 const API_BASE_URL = 'http://10.0.0.231:9000/api/v1/admin';
 
 export const GodMode: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'system' | 'roadmap' | 'suggestions' | 'code' | 'users' | 'evolution' | 'correction' | 'meetings' | 'budget'>('system');
+  const [activeTab, setActiveTab] = useState<'system' | 'roadmap' | 'suggestions' | 'code' | 'users' | 'evolution' | 'correction' | 'meetings' | 'budget' | 'docs' | 'champion' | 'cli'>('system');
   const [stats, setStats] = useState<string>('');
   const [logs, setLogs] = useState<string>('');
   const [selectedService, setSelectedService] = useState('momo-backend');
@@ -92,9 +95,12 @@ export const GodMode: React.FC = () => {
         <button onClick={() => setActiveTab('system')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'system' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><Server size={14} /> System</button>
         <button onClick={() => setActiveTab('budget')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'budget' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><DollarSign size={14} /> Budget</button>
         <button onClick={() => setActiveTab('users')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'users' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><Users size={14} /> Users</button>
+        <button onClick={() => setActiveTab('docs')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'docs' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><FileText size={14} /> Knowledge</button>
         <button onClick={() => setActiveTab('code')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'code' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><FileCode size={14} /> Code</button>
         <button onClick={() => setActiveTab('evolution')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'evolution' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><Cpu size={14} /> Models</button>
         <button onClick={() => setActiveTab('correction')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'correction' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><Brain size={14} /> Learning</button>
+        <button onClick={() => setActiveTab('champion')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'champion' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><Crown size={14} /> Champion</button>
+        <button onClick={() => setActiveTab('cli')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'cli' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-400 hover:bg-black/5'}`}><Download size={14} /> CLI Tools</button>
         <button onClick={() => setActiveTab('meetings')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'meetings' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><Mic size={14} /> Transcription</button>
         <button onClick={() => setActiveTab('roadmap')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'roadmap' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><Map size={14} /> Roadmap</button>
         <button onClick={() => setActiveTab('suggestions')} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'suggestions' ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-black/5'}`}><MessageSquare size={14} /> Suggestions</button>
@@ -155,10 +161,13 @@ export const GodMode: React.FC = () => {
 
         {activeTab === 'budget' && <BudgetMaster />}
         {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'docs' && <DocsPanel />}
         {activeTab === 'code' && <CodeHealthPanel />}
         {activeTab === 'evolution' && <ModelEvolution />}
         {activeTab === 'correction' && <CorrectionPanel />}
         {activeTab === 'meetings' && <MeetingTranscription />}
+        {activeTab === 'champion' && <ChampionPanel />}
+        {activeTab === 'cli' && <CLIDownloads />}
         {activeTab === 'roadmap' && <RoadmapPanel />}
         {activeTab === 'suggestions' && <SuggestionsPanel />}
       </div>
