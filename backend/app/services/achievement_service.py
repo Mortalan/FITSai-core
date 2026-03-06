@@ -10,14 +10,23 @@ logger = logging.getLogger(__name__)
 
 class AchievementService:
     async def get_user_achievements(self, db: AsyncSession, user_id: int) -> List[dict]:
-        # TRIPLE CHECK: Filter out hidden achievements unless already unlocked
+        # TRIPLE CHECK: Fixed hardcoded is_claimed status
         res = await db.execute(
             select(Achievement, UserAchievement)
             .outerjoin(UserAchievement, (Achievement.id == UserAchievement.achievement_id) & (UserAchievement.user_id == user_id))
             .where(or_(Achievement.is_hidden == False, UserAchievement.id != None))
             .order_by(Achievement.id)
         )
-        return [{"id": a.id, "name": a.name, "description": a.description, "rarity": a.rarity, "icon": a.icon, "unlocked": ua is not None, "unlocked_at": ua.unlocked_at if ua else None, "is_claimed": True} for a, ua in res.all()]
+        return [{
+            "id": a.id, 
+            "name": a.name, 
+            "description": a.description, 
+            "rarity": a.rarity, 
+            "icon": a.icon, 
+            "unlocked": ua is not None, 
+            "unlocked_at": ua.unlocked_at if ua else None, 
+            "is_claimed": ua.is_claimed if ua else False 
+        } for a, ua in res.all()]
 
     async def unlock_achievement(self, db: AsyncSession, user: User, achievement_name: str) -> bool:
         result = await db.execute(select(Achievement).where(Achievement.name == achievement_name))

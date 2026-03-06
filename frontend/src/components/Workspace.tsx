@@ -40,26 +40,15 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
     }
   }, [activeTab]);
 
-  const handleProfileUpdate = async (e: any) => {
-    if (e && e.preventDefault) e.preventDefault();
+  const handleProfileUpdate = async (fields?: any) => {
     setLoading(true);
     try {
-      const res = await updateProfile(profileForm);
+      const data = fields && fields.active_personality_id ? fields : profileForm;
+      const res = await updateProfile(data);
       updateUser(res.user);
       setSaveStatus('Identity Synced!');
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err) { alert('Sync failed'); }
-    setLoading(false);
-  };
-
-  const handlePersonalitySelect = async (id: number) => {
-    setLoading(true);
-    try {
-      const res = await updateProfile({ active_personality_id: id });
-      updateUser(res.user);
-      setSaveStatus('Voice Updated!');
-      setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err) {}
     setLoading(false);
   };
 
@@ -75,7 +64,7 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
   return (
     <div className="flex h-full font-sans bg-[var(--background)] animate-in fade-in duration-700">
       <div className="w-72 flex-shrink-0 bg-[var(--sidebar)] border-r border-[var(--border)] p-8 overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.7</p></div>
+        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.8</p></div>
         <div className="space-y-8">
           {menuSections.map((section, idx) => (
             <div key={idx}>
@@ -103,7 +92,7 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
                   <div className="flex items-center gap-8"><Avatar size={120} /><div className="space-y-2"><div className="flex items-center gap-3"><h2 className="text-4xl font-black tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div><p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p><p className="text-sm text-gray-500 font-medium">{user?.email}</p></div></div>
                   {saveStatus && <span className="text-green-500 text-xs font-black uppercase tracking-widest animate-bounce">{saveStatus}</span>}
                 </div>
-                <form onSubmit={handleProfileUpdate} className="space-y-10">
+                <form onSubmit={(e) => { e.preventDefault(); handleProfileUpdate(); }} className="space-y-10">
                   <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Display Identity</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none focus:ring-4 focus:ring-[var(--accent)]/10 font-bold" /></div>
                     <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Active Title</label>
@@ -122,7 +111,7 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
           {activeTab === 'personalities' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] p-10 shadow-sm">
               <div className="flex justify-between items-end mb-6"><div><h3 className="font-black text-3xl tracking-tighter">Momo Voice</h3><p className="text-gray-500 font-medium mt-1">Unlock more character voices as you level up your XP.</p></div>{saveStatus && <span className="text-green-500 text-xs font-black uppercase animate-pulse">{saveStatus}</span>}</div>
-              {loading && personalities.length === 0 ? (<div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>) : (<div className="grid grid-cols-2 gap-4">{personalities.map((p) => (<div key={p.id} onClick={() => p.is_unlocked && handlePersonalitySelect(p.id)} className={`p-6 rounded-3xl border-2 transition-all cursor-pointer relative group ${user?.active_personality_id === p.id ? 'border-[var(--accent)] bg-[var(--accent)]/5' : p.is_unlocked ? 'border-[var(--border)] hover:border-[var(--accent)]/50' : 'border-gray-100 opacity-60 grayscale'}`}>{!p.is_unlocked && (<div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 dark:bg-black/40 z-10 rounded-3xl"><Lock size={24} className="text-gray-400 mb-2" /><span className="text-xs font-black uppercase tracking-widest text-gray-500">LVL {p.unlock_level}</span></div>)}<div className="flex justify-between items-start mb-3"><span className="text-lg font-black capitalize tracking-tight">{p.name.replace(/_/g, ' ')}</span>{user?.active_personality_id === p.id && <CheckCircle2 size={20} className="text-[var(--accent)]" />}</div><p className="text-sm text-gray-500 font-medium leading-relaxed">{p.description}</p></div>))}</div>)}
+              {loading && personalities.length === 0 ? (<div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>) : (<div className="grid grid-cols-2 gap-4">{personalities.map((p) => (<div key={p.id} onClick={() => p.is_unlocked && handleProfileUpdate({ active_personality_id: p.id })} className={`p-6 rounded-3xl border-2 transition-all cursor-pointer relative group ${user?.active_personality_id === p.id ? 'border-[var(--accent)] bg-[var(--accent)]/5 shadow-inner' : p.is_unlocked ? 'border-[var(--border)] hover:border-[var(--accent)]/50' : 'border-gray-100 opacity-60 grayscale'}`}>{!p.is_unlocked && (<div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 dark:bg-black/40 z-10 rounded-3xl"><Lock size={24} className="text-gray-400 mb-2" /><span className="text-xs font-black uppercase tracking-widest text-gray-500">LVL {p.unlock_level}</span></div>)}<div className="flex justify-between items-start mb-3"><span className="text-lg font-black capitalize tracking-tight">{p.name.replace(/_/g, ' ')}</span>{user?.active_personality_id === p.id && <CheckCircle2 size={20} className="text-[var(--accent)]" />}</div><p className="text-sm text-gray-500 font-medium leading-relaxed">{p.description}</p></div>))}</div>)}
             </div>
           )}
           {activeTab === 'sops' && <DocumentLibrary type="SOP" />}

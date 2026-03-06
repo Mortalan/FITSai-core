@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, text
 from typing import Optional, List
 import logging
 
@@ -36,8 +36,16 @@ class FeedbackRequest(BaseModel):
 
 @router.get("/history")
 async def list_history(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
-    history = await conversation_service.get_user_conversations(db, user.id)
-    return [{"id": c.id, "title": c.title, "updated_at": c.updated_at} for c in history]
+    # TRIPLE CHECK: Fetch metadata ONLY for performance. NO large JSON blobs.
+    stmt = text("""
+        SELECT id, title, created_at, project_id 
+        FROM conversations 
+        WHERE user_id = :uid 
+        ORDER BY created_at DESC 
+        LIMIT 50
+    """)
+    res = await db.execute(stmt, {"uid": user.id})
+    return [{"id": r[0], "title": r[1], "created_at": r[2], "project_id": r[3]} for r in res.fetchall()]
 
 @router.get("/history/{conversation_id}")
 async def get_history(conversation_id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
@@ -109,7 +117,6 @@ async def stream_momo(request: Request, background_tasks: BackgroundTasks, curre
                 return
             except Exception: tier = AITier.TIER3
 
-        # Tier 3 Agentic Loop
         async with AsyncSessionLocal() as db:
             conv = await conversation_service.get_conversation(db, current_conv_id, current_user.id)
             lc_messages = [HumanMessage(content=m['content']) if m['role'] == 'user' else AIMessage(content=m['content']) for m in conv.messages]

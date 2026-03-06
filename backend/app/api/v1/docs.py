@@ -1,51 +1,71 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import FileResponse
-from typing import List
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import List, Optional
+import io
 import os
-import json
-from pathlib import Path
+from PyPDF2 import PdfReader
+from docx import Document as DocxDocument
+
+from app.core.database import get_db
+from app.models.document import Document
 from app.api.v1.auth import get_current_user
 from app.models.user import User
+from app.services.document_service import document_service
 
 router = APIRouter()
-DOCS_ROOT = Path("/home/felicia/momo-core/momo-docs")
-CATALOG_FILE = DOCS_ROOT / "catalog.json"
 
-def _load_catalog():
-    if not CATALOG_FILE.exists(): return []
-    with open(CATALOG_FILE) as f: return json.load(f)
-
-def _save_catalog(data):
-    DOCS_ROOT.mkdir(parents=True, exist_ok=True)
-    with open(CATALOG_FILE, "w") as f: json.dump(data, f, indent=2)
-
-@router.get("/")
-async def list_docs(user: User = Depends(get_current_user)):
-    return _load_catalog()
+@router.get("/", response_model=List[dict])
+async def list_documents(db: AsyncSession = Depends(get_db)):
+    # TRIPLE CHECK: Consolidated documentation API.
+    result = await db.execute(select(Document).order_by(Document.updated_at.desc()))
+    docs = result.scalars().all()
+    return [{
+        "id": d.id,
+        "title": d.title,
+        "category": d.category,
+        "updated_at": d.updated_at
+    } for d in docs]
 
 @router.post("/upload")
 async def upload_doc(
     file: UploadFile = File(...),
-    title: str = Form(...),
-    category: str = Form("General"),
+    category: str = Form("SOP"),
+    db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
     if not user.is_superuser: raise HTTPException(403)
-    
-    file_path = DOCS_ROOT / file.filename
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
-        
-    catalog = _load_catalog()
-    catalog.append({
-        "id": file.filename, "title": title, "category": category, 
-        "filename": file.filename, "size": os.path.getsize(file_path)
-    })
-    _save_catalog(catalog)
-    return {"status": "success"}
+    content = ""
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    try:
+        if file_ext == '.pdf':
+            pdf = PdfReader(io.BytesIO(await file.read()))
+            for page in pdf.pages: content += page.extract_text() + "\n"
+        elif file_ext == '.docx':
+            doc = DocxDocument(io.BytesIO(await file.read()))
+            content = "\n".join([p.text for p in doc.paragraphs])
+        elif file_ext == '.txt':
+            content = (await file.read()).decode('utf-8')
+        else: raise HTTPException(status_code=400, detail="Unsupported file type")
+            
+        doc = await document_service.create_document(db, file.filename, content, user.id, category)
+        return {"id": doc.id, "title": doc.title}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed: {str(e)}")
 
-@router.get("/{filename}")
-async def download_doc(filename: str, user: User = Depends(get_current_user)):
-    file_path = DOCS_ROOT / filename
-    if not file_path.exists(): raise HTTPException(404)
-    return FileResponse(path=file_path, filename=filename)
+@router.get("/{doc_id}")
+async def get_doc(doc_id: int, db: AsyncSession = Depends(get_db)):
+    content = await document_service.get_document_content(db, doc_id)
+    result = await db.execute(select(Document).where(Document.id == doc_id))
+    doc = result.scalar_one_or_none()
+    if not doc: raise HTTPException(status_code=404)
+    return {"id": doc.id, "title": doc.title, "content": content, "category": doc.category}
+
+@router.post("/{doc_id}/analyze")
+async def analyze_doc(doc_id: int, mode: str = "summarize", db: AsyncSession = Depends(get_db)):
+    content = await document_service.get_document_content(db, doc_id)
+    result = await db.execute(select(Document).where(Document.id == doc_id))
+    doc = result.scalar_one(); from app.services.document_analysis import document_analysis
+    analysis = await document_analysis.analyze_document(content, doc.title, mode, 1)
+    return {"analysis": analysis}
