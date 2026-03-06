@@ -37,7 +37,6 @@ async def get_system_stats(db: AsyncSession = Depends(get_db), user: User = Depe
     total_spend = await db.execute(select(func.sum(ApiUsage.cost)))
     scan_count = await db.execute(select(func.count(CodeScan.id)))
     doc_count = await db.execute(select(func.count(Document.id)))
-    
     return {
         "users": user_count.scalar(),
         "departments": dept_count.scalar(),
@@ -61,12 +60,8 @@ async def get_health_alerts(user: User = Depends(get_current_user)):
 async def get_model_evolution(user: User = Depends(get_current_user)):
     if not user.is_superuser: raise HTTPException(status_code=403)
     return {
-        "current_model": "gpt-4o", 
-        "fallback_model": getattr(settings, 'OLLAMA_CHAT_MODEL', 'llama3.1:8b'),
-        "coding_model": getattr(settings, 'OLLAMA_CODE_MODEL', 'deepseek-coder-v2:lite'),
-        "evolution_status": "technical_alignment",
-        "vram_usage": "4.2GB / 8GB", 
-        "last_benchmark": "2026-03-06"
+        "current_model": "gpt-4o", "fallback_model": "llama3.1:8b", "coding_model": "deepseek-coder-v2:lite",
+        "evolution_status": "stable", "vram_usage": "4.2GB / 8GB", "last_benchmark": "2026-03-06"
     }
 
 @router.get("/correction/stats")
@@ -126,8 +121,14 @@ async def restart_service(service_name: str, user: User = Depends(get_current_us
     if not user.is_superuser: raise HTTPException(status_code=403)
     allowed = ['momo-backend', 'momo-frontend', 'ollama', 'nginx', 'felicia-backend']
     if service_name not in allowed: raise HTTPException(400, "Invalid service")
-    subprocess.run(["systemctl", "restart", service_name])
-    return {"status": "success"}
+    # Use sudo to allow systemctl restart from python user
+    try:
+        subprocess.run(["sudo", "systemctl", "restart", service_name], check=True)
+        return {"status": "success"}
+    except Exception as e:
+        import logging
+        logging.error(f"Restart failed: {e}")
+        raise HTTPException(500, detail=f"Restart failed: {e}")
 
 @router.get("/logs/{service_name}")
 async def get_service_logs(service_name: str, user: User = Depends(get_current_user)):
