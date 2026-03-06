@@ -91,7 +91,7 @@ export const Chat: React.FC<{ messages: Message[], onSendMessage: (input: string
           <div className="h-full flex flex-col items-center justify-center text-center py-10 animate-in fade-in zoom-in duration-1000">
             {/* Conditional Debrief Rendering */}
             {user?.show_briefing && <div className="mb-10 w-full flex justify-center"><BriefingCard /></div>}
-            <h2 className="text-5xl font-black mb-4 text-[var(--foreground)] tracking-tighter">Hello, {user?.name || 'Technician'}</h2>
+            <h2 className="text-4xl font-bold mb-4 text-[var(--foreground)] tracking-tight">Hello, {user?.name || 'Technician'}</h2>
             <p className="text-lg text-gray-500 font-medium max-w-lg mx-auto">Momo is ready. Use the mic, type below, or press <kbd className="bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-sm mx-1">Ctrl+T</kbd> for templates.</p>
           </div>
         )}

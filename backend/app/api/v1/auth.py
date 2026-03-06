@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
 from jose import jwt, JWTError
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from app.core.database import get_db
 from app.models.user import User
@@ -22,7 +22,7 @@ class LoginRequest(BaseModel):
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
-    avatar_emoji: Optional[str] = None
+    avatar_emoji: Optional[Any] = None # Allow null explicitly
     avatar_color: Optional[str] = None
     active_personality_id: Optional[int] = None
     equipped_title: Optional[str] = None
@@ -77,11 +77,18 @@ async def update_profile(request: ProfileUpdate, db: AsyncSession = Depends(get_
     if request.active_personality_id is not None: user.active_personality_id = request.active_personality_id
     if request.show_briefing is not None: user.show_briefing = request.show_briefing
     
-    if request.avatar_emoji or request.avatar_color:
-        effects = dict(user.special_effects) if user.special_effects else {}
-        if request.avatar_emoji: effects["emoji"] = request.avatar_emoji
-        if request.avatar_color: effects["color"] = request.avatar_color
-        user.special_effects = effects
+    # Handle Special Effects Update (Explicit Null handling)
+    effects = dict(user.special_effects) if user.special_effects else {}
+    
+    # Check if field was provided in request body (even if None)
+    req_dict = request.model_dump(exclude_unset=True)
+    
+    if "avatar_emoji" in req_dict:
+        effects["emoji"] = request.avatar_emoji
+    if "avatar_color" in req_dict:
+        effects["color"] = request.avatar_color
+        
+    user.special_effects = effects
         
     if request.avatar_background:
         cust = dict(user.avatar_customization) if user.avatar_customization else {}

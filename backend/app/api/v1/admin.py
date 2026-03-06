@@ -62,7 +62,6 @@ async def restart_service(service_name: str, user: User = Depends(get_current_us
     allowed = ['momo-backend', 'momo-frontend', 'ollama', 'nginx', 'felicia-backend']
     if service_name not in allowed: raise HTTPException(400, "Invalid service")
     try:
-        # TRIPLE CHECK: Use sudo to allow systemctl restart from python user
         subprocess.run(["sudo", "systemctl", "restart", service_name], check=True)
         return {"status": "success"}
     except Exception as e:
@@ -75,6 +74,19 @@ async def get_service_logs(service_name: str, user: User = Depends(get_current_u
         res = subprocess.run(["journalctl", "-u", service_name, "-n", "100", "--no-pager"], capture_output=True, text=True)
         return {"logs": res.stdout}
     except: return {"logs": "Failed to fetch journals."}
+
+@router.post("/assets/upload")
+async def upload_asset(
+    file: UploadFile = File(...),
+    filename: str = Form(...),
+    user: User = Depends(get_current_user)
+):
+    if not user.is_superuser: raise HTTPException(403)
+    save_path = Path("/home/felicia/momo-core/frontend/public/avatars") / filename
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(save_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"status": "success"}
 
 @router.get("/downloads")
 async def get_downloads():

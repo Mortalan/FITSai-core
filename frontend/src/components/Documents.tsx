@@ -64,7 +64,7 @@ export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB', forceCategory?: str
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <button onClick={() => setSelectedDoc(null)} className="flex items-center gap-2 text-gray-500 hover:text-[var(--foreground)] font-black transition-all bg-[var(--input-bg)] px-5 py-2.5 rounded-2xl mb-4"><ArrowLeft size={18} /> BACK TO LIST</button>
         <div className="bg-[var(--sidebar)] border border-[var(--border)] rounded-[48px] p-16 shadow-sm min-h-[700px]">
-          <h1 className="text-6xl font-black tracking-tighter mb-10">{selectedDoc.title}</h1>
+          <h1 className="text-4xl font-bold mb-10">{selectedDoc.title}</h1>
           <p className="whitespace-pre-wrap text-lg leading-relaxed text-gray-700 dark:text-gray-300">{selectedDoc.content}</p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB', forceCategory?: str
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex items-center justify-between bg-[var(--sidebar)] p-12 border border-[var(--border)] rounded-[48px] shadow-sm">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">{forceCategory === 'GOD_MODE' ? 'System Documents' : type === 'SOP' ? 'Technical SOPs' : 'File Library'}</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{forceCategory === 'GOD_MODE' ? 'System Documents' : type === 'SOP' ? 'Technical SOPs' : 'File Library'}</h1>
           <p className="text-gray-500 font-medium mt-3 text-lg">{forceCategory === 'GOD_MODE' ? 'Internal system architecture.' : type === 'SOP' ? 'Verified technical procedures.' : 'Manuals, drivers, and reference documents.'}</p>
         </div>
         <div className="flex items-center gap-4">
@@ -86,7 +86,7 @@ export const DocumentLibrary: React.FC<{ type: 'SOP' | 'KB', forceCategory?: str
 
       <div className="relative group">
         <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-400" size={28} />
-        <input type="text" placeholder="Search catalog..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-[32px] py-8 pl-20 pr-10 outline-none text-2xl font-black tracking-tight focus:ring-8 focus:ring-[var(--accent)]/10 transition-all" />
+        <input type="text" placeholder="Search catalog..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-[32px] py-8 pl-20 pr-10 outline-none text-xl font-bold focus:ring-8 focus:ring-[var(--accent)]/10 transition-all" />
       </div>
 
       {isLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[var(--accent)]" size={40} /></div> : (

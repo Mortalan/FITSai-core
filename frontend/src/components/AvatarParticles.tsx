@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 const PARTICLE_CONFIGS: Record<string, { colors: string[]; symbols?: string[] }> = {
   'none': { colors: [] },
@@ -21,39 +21,62 @@ const CLASS_PARTICLE_TYPES: Record<string, string> = {
   'Dragon': 'smoke-embers', 'Demigod': 'golden-rays', 'God': 'stars', 'BDFL': 'cosmic',
 };
 
-export const AvatarParticles: React.FC<{ charClass: string, level: number, size: number }> = ({ charClass, level, size }) => {
+export const AvatarParticles: React.FC<{ charClass: string, level: number, size: number, intensity?: number }> = ({ charClass, level, size, intensity = 100 }) => {
   const [particles, setParticles] = useState<any[]>([]);
   const particleType = CLASS_PARTICLE_TYPES[charClass] || 'none';
   const config = PARTICLE_CONFIGS[particleType] || PARTICLE_CONFIGS['none'];
 
   useEffect(() => {
-    if (config.colors.length === 0) return;
-    const count = Math.min(level, 12);
+    if (config.colors.length === 0 || intensity === 0) {
+      setParticles([]);
+      return;
+    }
+    
+    // Scale count based on level and intensity setting
+    const count = Math.min(Math.floor((level * (intensity / 100)) + 4), 24);
+    
     setParticles(Array.from({ length: count }, (_, i) => ({
-      id: i, angle: (Math.PI * 2 / count) * i, speed: 0.02,
+      id: i, 
+      angle: (Math.PI * 2 / count) * i, 
+      speed: 0.01 + (Math.random() * 0.02),
+      radius: size * 0.6 + (Math.random() * size * 0.2),
       color: config.colors[i % config.colors.length],
-      symbol: config.symbols ? config.symbols[i % config.symbols.length] : null
+      symbol: config.symbols ? config.symbols[i % config.symbols.length] : null,
+      oscillation: Math.random() * Math.PI
     })));
 
     const interval = setInterval(() => {
-      setParticles(prev => prev.map(p => ({ ...p, angle: p.angle + 0.03 })));
-    }, 50);
+      setParticles(prev => prev.map(p => ({ 
+        ...p, 
+        angle: p.angle + p.speed,
+        oscillation: p.oscillation + 0.1
+      })));
+    }, 30);
     return () => clearInterval(interval);
-  }, [charClass, level, config]);
+  }, [charClass, level, config, intensity, size]);
 
-  if (config.colors.length === 0) return null;
+  if (particles.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-visible">
+    <div className="absolute inset-0 pointer-events-none overflow-visible z-0">
       {particles.map(p => (
-        <div key={p.id} className="absolute transition-all duration-100 opacity-60" style={{
-          left: '50%', top: '50%',
-          transform: `translate(${Math.cos(p.angle) * size * 0.7}px, ${Math.sin(p.angle) * size * 0.7}px) translate(-50%, -50%)`,
-          width: p.symbol ? 'auto' : '4px', height: p.symbol ? 'auto' : '4px',
-          backgroundColor: p.symbol ? 'transparent' : p.color,
-          boxShadow: p.symbol ? 'none' : `0 0 8px ${p.color}`,
-          fontSize: p.symbol ? '12px' : '0'
-        }}>{p.symbol}</div>
+        <div 
+          key={p.id} 
+          className="absolute transition-transform duration-300" 
+          style={{
+            left: '50%', 
+            top: '50%',
+            transform: `translate(${Math.cos(p.angle) * p.radius}px, ${Math.sin(p.angle) * p.radius + Math.sin(p.oscillation) * 5}px) translate(-50%, -50%)`,
+            width: p.symbol ? 'auto' : '4px', 
+            height: p.symbol ? 'auto' : '4px',
+            backgroundColor: p.symbol ? 'transparent' : p.color,
+            boxShadow: p.symbol ? 'none' : `0 0 10px ${p.color}`,
+            fontSize: p.symbol ? '${size * 0.25}px' : '0',
+            opacity: 0.4 + (Math.sin(p.oscillation) * 0.3)
+          }}
+        >
+          {p.symbol}
+        </div>
       ))}
     </div>
   );

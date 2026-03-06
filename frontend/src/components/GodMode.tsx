@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
-  Server, Activity, RefreshCw, List, ShieldAlert, Loader2, Cpu, 
+  Server, RefreshCw, List, ShieldAlert, Loader2, Cpu, 
   Map, MessageSquare, Terminal as TerminalIcon, FileCode, Users, 
   Brain, DollarSign, FileText, Crown, ChevronLeft, Image
 } from 'lucide-react';
@@ -26,7 +26,6 @@ export const GodMode: React.FC = () => {
   const [logs, setLogs] = useState<string>('');
   const [selectedService, setSelectedService] = useState('momo-backend');
   const [isLoading, setIsLoading] = useState(false);
-  const [isActionLoading, setIsActionLoading] = useState(false);
   const token = useAuthStore((state) => state.token);
 
   const adminApps = [
@@ -44,7 +43,13 @@ export const GodMode: React.FC = () => {
     { id: 'suggestions', name: 'User Feedback', icon: MessageSquare, color: 'bg-rose-500', desc: 'Suggestion loop' },
   ];
 
-  const services = [{ id: 'momo-backend', name: 'Momo Backend' }, { id: 'momo-frontend', name: 'Momo Frontend' }, { id: 'ollama', name: 'Ollama AI' }, { id: 'nginx', name: 'Nginx' }, { id: 'felicia-backend', name: 'Legacy Core' }];
+  const services = [
+    { id: 'momo-backend', name: 'Momo Backend' }, 
+    { id: 'momo-frontend', name: 'Momo Frontend' }, 
+    { id: 'ollama', name: 'Ollama AI' }, 
+    { id: 'nginx', name: 'Nginx' }, 
+    { id: 'felicia-backend', name: 'Legacy Core' }
+  ];
 
   useEffect(() => { if (activeTab === 'system') fetchStats(); }, [activeTab]);
 
@@ -66,33 +71,43 @@ export const GodMode: React.FC = () => {
 
   const restartService = async (service: string) => {
     if (!window.confirm(`Restart ${service}?`)) return;
-    setIsActionLoading(true);
-    try { await axios.post(`${API_BASE_URL}/service/${service}/restart`, {}, { headers: { Authorization: `Bearer ${token}` } }); alert('Restart initiated'); } catch (err) {} finally { setIsActionLoading(false); }
+    try { await axios.post(`${API_BASE_URL}/service/${service}/restart`, {}, { headers: { Authorization: `Bearer ${token}` } }); alert('Restart initiated'); } catch (err) {}
   };
 
   if (activeTab) {
     return (
-      <div className="space-y-8 animate-in slide-in-from-bottom-2 duration-300">
-        <button onClick={() => setActiveTab(null)} className="flex items-center gap-2 text-gray-500 hover:text-[var(--foreground)] font-bold transition-all bg-[var(--input-bg)] px-4 py-2 rounded-xl mb-4"><ChevronLeft size={18} /> Back to Dashboard</button>
+      <div className="space-y-10 animate-in slide-in-from-bottom-2 duration-300">
+        <div className="flex items-center justify-between">
+          <button onClick={() => setActiveTab(null)} className="flex items-center gap-2 text-gray-500 hover:text-[var(--foreground)] font-bold transition-all bg-[var(--input-bg)] px-5 py-2.5 rounded-2xl"><ChevronLeft size={18} /> Dashboard</button>
+          <div className="px-4 py-2 bg-[var(--accent)]/5 border border-[var(--accent)]/10 rounded-xl"><span className="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest">Admin Perspective Active</span></div>
+        </div>
+
         {activeTab === 'system' && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-in fade-in duration-300">
-            <div className="xl:col-span-1 space-y-8">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest text-gray-400">System Metrics</h3><button onClick={fetchStats} className="p-2 hover:bg-black/5 rounded-xl transition-all"><RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} /></button></div>
-                <pre className="bg-black text-green-500/80 p-6 rounded-3xl font-mono text-[11px] leading-relaxed overflow-y-auto max-h-[300px] border border-gray-800">{stats || 'Fetching...'}</pre>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 animate-in fade-in duration-300">
+            <div className="xl:col-span-1 space-y-10">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between px-2"><h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Metrics</h3><button onClick={fetchStats} className="p-2 hover:bg-black/5 rounded-xl transition-all"><RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} /></button></div>
+                <pre className="bg-black text-green-500/80 p-8 rounded-[32px] font-mono text-[11px] leading-relaxed overflow-y-auto max-h-[300px] border border-gray-800 shadow-2xl">{stats || 'Fetching...'}</pre>
               </div>
-              <div className="space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Service Manager</h3>
-                <div className="space-y-2">{services.map(s => (<div key={s.id} className="flex items-center justify-between p-4 bg-white dark:bg-black/20 rounded-2xl border border-[var(--border)] group hover:border-[var(--accent)] transition-all"><span className="text-sm font-bold">{s.name}</span><div className="flex items-center gap-2"><button onClick={() => fetchLogs(s.id)} className="p-2 hover:bg-[var(--accent)]/10 text-gray-400 hover:text-[var(--accent)] rounded-xl"><List size={18} /></button><button onClick={() => restartService(s.id)} className="p-2 hover:bg-red-500/10 text-gray-400 hover:text-red-500 rounded-xl"><RefreshCw size={18} /></button></div></div>))}</div>
+              <div className="space-y-6">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 px-2">Services</h3>
+                <div className="space-y-3">
+                  {services.map(s => (
+                    <div key={s.id} className="flex items-center justify-between p-6 bg-[var(--sidebar)] rounded-[24px] border border-[var(--border)] group hover:border-[var(--accent)] transition-all shadow-sm">
+                      <span className="text-sm font-bold">{s.name}</span>
+                      <div className="flex items-center gap-2"><button onClick={() => fetchLogs(s.id)} className="p-2.5 hover:bg-[var(--accent)]/10 text-gray-400 hover:text-[var(--accent)] rounded-xl transition-all"><List size={18} /></button><button onClick={() => restartService(s.id)} className="p-2.5 hover:bg-red-500/10 text-gray-400 hover:text-red-500 rounded-xl transition-all"><RefreshCw size={18} /></button></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="xl:col-span-2">
-              <div className="bg-black rounded-[32px] overflow-hidden border border-gray-800 shadow-2xl h-full min-h-[650px] flex flex-col">
-                <div className="bg-gray-900 px-8 py-4 border-b border-gray-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3"><TerminalIcon size={16} className="text-green-500" /><span className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Terminal • {selectedService}</span></div>
-                  <button onClick={() => fetchLogs(selectedService)} className="text-gray-500 hover:text-green-500 transition-colors"><RefreshCw size={14} /></button>
+              <div className="bg-black rounded-[40px] overflow-hidden border border-gray-800 shadow-2xl h-full min-h-[700px] flex flex-col">
+                <div className="bg-gray-900 px-10 py-5 border-b border-gray-800 flex items-center justify-between">
+                  <div className="flex items-center gap-4"><TerminalIcon size={18} className="text-green-500" /><span className="text-[10px] font-black uppercase text-gray-500 tracking-[0.3em]">Journal Stream • {selectedService}</span></div>
+                  <button onClick={() => fetchLogs(selectedService)} className="text-gray-500 hover:text-green-500 transition-colors"><RefreshCw size={16} /></button>
                 </div>
-                <div className="flex-1 p-8 overflow-y-auto custom-scrollbar font-mono text-[13px] leading-relaxed text-green-500/90"><pre className="whitespace-pre-wrap">{logs || `Momo Control v2.1.7\nSelect a service to stream journals...\n\nReady.`}</pre></div>
+                <div className="flex-1 p-10 overflow-y-auto custom-scrollbar font-mono text-[13px] leading-relaxed text-green-500/90"><pre className="whitespace-pre-wrap">{logs || `Momo Control v2.2.4\nSelect a service to stream journals...\n\nReady.`}</pre></div>
               </div>
             </div>
           </div>
@@ -113,20 +128,21 @@ export const GodMode: React.FC = () => {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
-      <div className="flex items-center gap-6">
-        <div className="p-4 bg-red-500 text-white rounded-[24px] shadow-xl shadow-red-500/20"><ShieldAlert size={40} /></div>
-        <div><h1 className="text-4xl font-black tracking-tighter uppercase">God Mode</h1><p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest mt-1">Master Control Center</p></div>
+    <div className="p-8 max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500">
+      <div className="flex items-center gap-8 mb-4">
+        <div className="p-5 bg-red-500 text-white rounded-[28px] shadow-xl shadow-red-500/20"><ShieldAlert size={48} /></div>
+        <div><h1 className="text-4xl font-bold tracking-tighter uppercase">God Mode</h1><p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">Master Administrative Hub</p></div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {adminApps.map(app => (
-          <button key={app.id} onClick={() => setActiveTab(app.id)} className="group p-8 bg-[var(--sidebar)] border border-[var(--border)] rounded-[32px] hover:border-[var(--accent)] transition-all text-left shadow-sm hover:shadow-xl relative overflow-hidden">
-            <div className={`w-12 h-12 ${app.color} text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
-              <app.icon size={24} />
+          <button key={app.id} onClick={() => setActiveTab(app.id)} className="group p-10 bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] hover:border-[var(--accent)] transition-all text-left shadow-sm hover:shadow-2xl relative overflow-hidden">
+            <div className={`w-14 h-14 ${app.color} text-white rounded-[20px] flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 transition-transform`}>
+              <app.icon size={28} />
             </div>
-            <h3 className="text-lg font-black tracking-tight mb-2">{app.name}</h3>
-            <p className="text-xs text-gray-500 font-medium leading-relaxed">{app.desc}</p>
-            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity"><app.icon size={120} /></div>
+            <h3 className="text-xl font-bold tracking-tight mb-3 group-hover:text-[var(--accent)] transition-colors">{app.name}</h3>
+            <p className="text-sm text-gray-500 font-medium leading-relaxed">{app.desc}</p>
+            <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:opacity-10 transition-opacity"><app.icon size={160} /></div>
           </button>
         ))}
       </div>

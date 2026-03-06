@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, ShieldAlert, Palette, DollarSign, Users, FileText, Award, Trophy, 
-  Bell, Edit2, Save, Smile, BookOpen, Mic, FileCode2, ChevronRight, Zap, Sparkles, Download, Settings
+  Bell, Edit2, Save, Smile, BookOpen, Mic, FileCode2, ChevronRight, Zap, Sparkles, Download, Settings, Image as ImageIcon, Sliders
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { GodMode } from './GodMode';
@@ -25,12 +25,15 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
+  const [avatarMode, setAvatarMode] = useState<'icon' | 'asset'>(user?.special_effects?.emoji ? 'icon' : 'asset');
+
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
     equipped_title: user?.equipped_title || '',
-    avatar_emoji: user?.special_effects?.emoji || '🤖',
+    avatar_emoji: user?.special_effects?.emoji || '',
     avatar_color: user?.special_effects?.color || '#3b82f6',
-    avatar_background: user?.avatar_customization?.background || 'none'
+    avatar_background: user?.avatar_customization?.background || 'none',
+    particle_intensity: user?.avatar_customization?.particleIntensity || 100
   });
 
   useEffect(() => {
@@ -43,8 +46,29 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
   const handleProfileUpdate = async (fields?: any) => {
     setLoading(true);
     try {
-      const data = fields ? { ...fields } : profileForm;
-      const res = await updateProfile(data);
+      const baseData: any = { ...profileForm };
+      
+      // Explicitly clear emoji if in asset mode
+      if (avatarMode === 'asset' && !fields?.avatar_emoji) {
+        baseData.avatar_emoji = null;
+      }
+
+      // Map local form fields to backend structure
+      const payload: any = {
+        name: baseData.name,
+        equipped_title: baseData.equipped_title,
+        avatar_emoji: baseData.avatar_emoji,
+        avatar_color: baseData.avatar_color,
+        avatar_background: baseData.avatar_background,
+        avatar_customization: {
+          ...user?.avatar_customization,
+          background: baseData.avatar_background,
+          particleIntensity: baseData.particle_intensity
+        }
+      };
+
+      const finalData = fields ? { ...payload, ...fields } : payload;
+      const res = await updateProfile(finalData);
       updateUser(res.user);
       setSaveStatus('Identity Synced!');
       setTimeout(() => setSaveStatus(null), 3000);
@@ -64,7 +88,7 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
   return (
     <div className="flex h-full font-sans bg-[var(--background)] animate-in fade-in duration-700">
       <div className="w-72 flex-shrink-0 bg-[var(--sidebar)] border-r border-[var(--border)] p-8 overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.9</p></div>
+        <div className="mb-10"><h2 className="text-xl font-bold tracking-tighter">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.2.4</p></div>
         <div className="space-y-8">
           {menuSections.map((section, idx) => (
             <div key={idx}>
@@ -87,25 +111,68 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
           {activeTab === 'profile' && (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
               <ProgressDashboard />
+              
               <div className="bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] p-10 shadow-sm">
-                <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-8"><Avatar size={120} /><div className="space-y-2"><div className="flex items-center gap-3"><h2 className="text-4xl font-black tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div><p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p><p className="text-sm text-gray-500 font-medium">{user?.email}</p></div></div>
+                <div className="flex items-center justify-between mb-12">
+                  <div className="flex items-center gap-8">
+                    <div className="p-2 bg-white dark:bg-black/20 rounded-full shadow-inner"><Avatar size={120} /></div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3"><h2 className="text-3xl font-bold tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div>
+                      <p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p>
+                      <p className="text-sm text-gray-500 font-medium">{user?.email}</p>
+                    </div>
+                  </div>
                   {saveStatus && <span className="text-green-500 text-xs font-black uppercase tracking-widest animate-bounce">{saveStatus}</span>}
                 </div>
                 
                 <div className="space-y-12">
+                  {/* Section 1: Core Identity */}
                   <form onSubmit={(e) => { e.preventDefault(); handleProfileUpdate(); }} className="space-y-10">
-                    <div className="grid grid-cols-2 gap-8">
-                      <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Display Identity</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none focus:ring-4 focus:ring-[var(--accent)]/10 font-bold" /></div>
-                      <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Active Title</label>
-                        <select value={profileForm.equipped_title} onChange={e => setProfileForm({...profileForm, equipped_title: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none font-bold">
-                          <option value="">No Title Equipped</option>
-                          {user?.titles?.map((t: string) => <option key={t} value={t}>{t}</option>)}
-                        </select>
+                    <div className="space-y-6">
+                      <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2"><User size={14} className="text-blue-500" /> Profile Basics</h4>
+                      <div className="grid grid-cols-2 gap-8">
+                        <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Display Identity</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none focus:ring-4 focus:ring-[var(--accent)]/10 font-bold text-sm" /></div>
+                        <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Active Title</label>
+                          <select value={profileForm.equipped_title} onChange={e => setProfileForm({...profileForm, equipped_title: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none font-bold text-sm">
+                            <option value="">No Title Equipped</option>
+                            {user?.titles?.map((t: string) => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="space-y-6"><h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2"><Sparkles size={14} className="text-yellow-500" /> Visual Identity Customization</h4><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Avatar Icon</label><input type="text" value={profileForm.avatar_emoji} onChange={e => setProfileForm({...profileForm, avatar_emoji: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 text-center text-2xl" placeholder="e.g. 🤖" /></div><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Aura Color</label><div className="flex gap-2"><input type="color" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="h-[60px] w-20 bg-transparent border-none outline-none cursor-pointer" /><input type="text" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 text-xs font-mono" /></div></div><div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Background Effect</label><select value={profileForm.avatar_background} onChange={e => setProfileForm({...profileForm, avatar_background: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 font-bold text-sm"><option value="none">Standard (None)</option><option value="glow">Level 10: Subtle Glow</option><option value="border">Level 20: Tech Border</option><option value="cosmic">Level 40: Cosmic Aura</option></select></div></div></div>
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2"><Sparkles size={14} className="text-yellow-500" /> Visual Identity Customization</h4>
+                        <div className="flex bg-[var(--input-bg)] p-1 rounded-xl border border-[var(--border)]">
+                          <button type="button" onClick={() => setAvatarMode('asset')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${avatarMode === 'asset' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-gray-400 hover:text-[var(--foreground)]'}`}>Class Asset</button>
+                          <button type="button" onClick={() => setAvatarMode('icon')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${avatarMode === 'icon' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-gray-400 hover:text-[var(--foreground)]'}`}>Custom Icon</button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Avatar Visual</label>
+                          {avatarMode === 'asset' ? (
+                            <div className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden bg-white shadow-sm"><img src={`/avatars/${user?.character_class?.toLowerCase()}.png`} className="w-full h-full object-cover" onError={(e) => e.currentTarget.src='/assets/avfel2.png'} /></div>
+                              <div className="flex-1"><p className="text-xs font-bold">{user?.character_class} Asset</p><p className="text-[9px] text-gray-400 uppercase">Transparent PNG</p></div>
+                            </div>
+                          ) : (
+                            <input type="text" value={profileForm.avatar_emoji} onChange={e => setProfileForm({...profileForm, avatar_emoji: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 text-center text-2xl shadow-inner" placeholder="e.g. 🤖" />
+                          )}
+                        </div>
+                        <div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Aura Color</label><div className="flex gap-2"><input type="color" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="h-[60px] w-20 bg-transparent border-none outline-none cursor-pointer" /><input type="text" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 text-xs font-mono font-bold" /></div></div>
+                        <div className="space-y-2"><label className="text-[9px] font-black uppercase text-gray-400 ml-1">Background Effect</label><select value={profileForm.avatar_background} onChange={e => setProfileForm({...profileForm, avatar_background: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 font-bold text-sm shadow-inner"><option value="none">Standard (None)</option><option value="glow">Level 10: Subtle Glow</option><option value="border">Level 20: Tech Border</option><option value="cosmic">Level 40: Cosmic Aura</option></select></div>
+                      </div>
+
+                      {/* NEW: Particle Intensity Setting */}
+                      <div className="p-8 bg-[var(--input-bg)]/50 border border-[var(--border)] rounded-[32px] space-y-4">
+                        <div className="flex items-center justify-between"><label className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-2"><Sliders size={14} /> Particle Intensity</label><span className="text-xs font-bold text-[var(--accent)]">{profileForm.particle_intensity}%</span></div>
+                        <input type="range" min="0" max="200" value={profileForm.particle_intensity} onChange={e => setProfileForm({...profileForm, particle_intensity: parseInt(e.target.value)})} className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[var(--accent)]" />
+                        <p className="text-[9px] text-gray-400 font-medium">Adjust the density of class-specific orbital effects.</p>
+                      </div>
+                    </div>
                     
                     <div className="flex justify-end pt-4"><button type="submit" disabled={loading} className="bg-[var(--accent)] text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[var(--accent)]/30 hover:scale-105 transition-all">Synchronize Production Identity</button></div>
                   </form>
@@ -113,18 +180,8 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
                   <div className="pt-10 border-t border-[var(--border)]">
                     <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-2"><Settings size={14} className="text-blue-500" /> System Preferences</h4>
                     <div className="p-8 bg-[var(--input-bg)] border border-[var(--border)] rounded-[32px] flex items-center justify-between group hover:border-[var(--accent)] transition-all">
-                      <div>
-                        <p className="text-lg font-black tracking-tight">Enable Daily Briefing</p>
-                        <p className="text-sm text-gray-500 font-medium">Show the AI-generated debrief card on the chat dashboard.</p>
-                      </div>
-                      <button 
-                        type="button"
-                        disabled={loading}
-                        onClick={() => handleProfileUpdate({ show_briefing: !user?.show_briefing })}
-                        className={`w-16 h-9 rounded-full transition-all relative ${user?.show_briefing ? 'bg-green-500 shadow-lg shadow-green-500/20' : 'bg-gray-300 dark:bg-gray-700'}`}
-                      >
-                        <div className={`absolute top-1 w-7 h-7 bg-white rounded-full transition-all shadow-sm ${user?.show_briefing ? 'left-8' : 'left-1'}`} />
-                      </button>
+                      <div><p className="text-lg font-bold tracking-tight">Enable Daily Briefing</p><p className="text-sm text-gray-500 font-medium">Show the AI-generated debrief card on the chat dashboard.</p></div>
+                      <button type="button" disabled={loading} onClick={() => handleProfileUpdate({ show_briefing: !user?.show_briefing })} className={`w-16 h-9 rounded-full transition-all relative ${user?.show_briefing ? 'bg-green-500 shadow-lg shadow-green-500/20' : 'bg-gray-300 dark:bg-gray-700'}`}><div className={`absolute top-1 w-7 h-7 bg-white rounded-full transition-all shadow-sm ${user?.show_briefing ? 'left-8' : 'left-1'}`} /></button>
                     </div>
                   </div>
                 </div>
@@ -132,9 +189,11 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
             </div>
           )}
           {activeTab === 'personalities' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] p-10 shadow-sm">
-              <div className="flex justify-between items-end mb-6"><div><h3 className="font-black text-3xl tracking-tighter">Momo Voice</h3><p className="text-gray-500 font-medium mt-1">Unlock more character voices as you level up your XP.</p></div>{saveStatus && <span className="text-green-500 text-xs font-black uppercase animate-pulse">{saveStatus}</span>}</div>
-              {loading && personalities.length === 0 ? (<div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>) : (<div className="grid grid-cols-2 gap-4">{personalities.map((p) => (<div key={p.id} onClick={() => p.is_unlocked && handleProfileUpdate({ active_personality_id: p.id })} className={`p-6 rounded-3xl border-2 transition-all cursor-pointer relative group ${user?.active_personality_id === p.id ? 'border-[var(--accent)] bg-[var(--accent)]/5 shadow-inner' : p.is_unlocked ? 'border-[var(--border)] hover:border-[var(--accent)]/50' : 'border-gray-100 opacity-60 grayscale'}`}>{!p.is_unlocked && (<div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 dark:bg-black/40 z-10 rounded-3xl"><Lock size={24} className="text-gray-400 mb-2" /><span className="text-xs font-black uppercase tracking-widest text-gray-500">LVL {p.unlock_level}</span></div>)}<div className="flex justify-between items-start mb-3"><span className="text-lg font-black capitalize tracking-tight">{p.name.replace(/_/g, ' ')}</span>{user?.active_personality_id === p.id && <CheckCircle2 size={20} className="text-[var(--accent)]" />}</div><p className="text-sm text-gray-500 font-medium leading-relaxed">{p.description}</p></div>))}</div>)}
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] p-10 shadow-sm">
+                <div className="flex justify-between items-end mb-10"><div><h3 className="font-bold text-3xl tracking-tighter">Momo Voice</h3><p className="text-gray-500 font-medium mt-1">Unlock more character voices as you level up your XP.</p></div>{saveStatus && <span className="text-green-500 text-xs font-black uppercase animate-pulse">{saveStatus}</span>}</div>
+                {loading && personalities.length === 0 ? (<div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" /></div>) : (<div className="grid grid-cols-1 md:grid-cols-2 gap-6">{personalities.map((p) => (<div key={p.id} onClick={() => p.is_unlocked && handleProfileUpdate({ active_personality_id: p.id })} className={`p-8 rounded-[32px] border-2 transition-all cursor-pointer relative group ${user?.active_personality_id === p.id ? 'border-[var(--accent)] bg-[var(--accent)]/5 shadow-inner' : p.is_unlocked ? 'border-[var(--border)] hover:border-[var(--accent)]/50' : 'border-gray-100 opacity-60 grayscale'}`}>{!p.is_unlocked && (<div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 dark:bg-black/40 z-10 rounded-[32px]"><Lock size={24} className="text-gray-400 mb-2" /><span className="text-xs font-black uppercase tracking-widest text-gray-500">LVL {p.unlock_level}</span></div>)}<div className="flex justify-between items-start mb-4"><span className="text-xl font-bold capitalize tracking-tight">{p.name.replace(/_/g, ' ')}</span>{user?.active_personality_id === p.id && <CheckCircle2 size={24} className="text-[var(--accent)]" />}</div><p className="text-sm text-gray-500 font-medium leading-relaxed">{p.description}</p></div>))}</div>)}
+              </div>
             </div>
           )}
           {activeTab === 'sops' && <DocumentLibrary type="SOP" />}

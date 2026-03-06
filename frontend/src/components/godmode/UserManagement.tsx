@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, ShieldAlert, ShieldCheck, Edit2, Save, X, Loader2, Award, CheckCircle2, ChevronDown, Trophy } from 'lucide-react';
+import { User, ShieldCheck, Edit2, Save, X, Loader2, Award, CheckCircle2, ChevronDown, Trophy, Users } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../../store/authStore';
 
@@ -35,57 +35,73 @@ export const UserManagement: React.FC = () => {
     } catch (err) { alert('Failed'); }
   };
 
-  if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-[var(--accent)]" /></div>;
+  if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-[var(--accent)]" size={32} /></div>;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center mb-8">
-        <h3 className="font-black text-2xl tracking-tighter">User Directory</h3>
-        <p className="text-xs text-gray-500 font-bold uppercase">{users.length} Active Technicians</p>
+    <div className="space-y-10 animate-in fade-in duration-500">
+      <div className="bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] p-10 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="p-3 bg-purple-500/10 text-purple-500 rounded-2xl"><Users size={28} /></div>
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">User Directory</h2>
+              <p className="text-gray-500 font-medium text-sm">Manage technician credentials and RPG progress.</p>
+            </div>
+          </div>
+          <div className="px-6 py-2.5 bg-purple-500/10 text-purple-600 rounded-xl border border-purple-500/20">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{users.length} Active Accounts</span>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-6">
         {users.map(u => (
-          <div key={u.id} className="p-6 bg-[var(--sidebar)] border border-[var(--border)] rounded-[32px] space-y-6 shadow-sm group hover:border-[var(--accent)] transition-all">
+          <div key={u.id} className="p-8 bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] space-y-8 shadow-sm group hover:border-[var(--accent)] transition-all">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-black text-2xl">{u.name?.[0]}</div>
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-14 rounded-[20px] bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-bold text-2xl shadow-inner">{u.name?.[0]}</div>
                 <div>
-                  <h4 className="font-black text-lg flex items-center gap-2">{u.name} {u.is_superuser && <ShieldCheck size={16} className="text-red-500" />}</h4>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{u.email} • Level {u.character_level} {u.character_class}</p>
+                  <h4 className="font-bold text-xl flex items-center gap-3">{u.name} {u.is_superuser && <ShieldCheck size={18} className="text-red-500" />}</h4>
+                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">{u.email} • LVL {u.character_level} {u.character_class}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setAwardMenuId(awardMenuId === u.id ? null : u.id)} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${awardMenuId === u.id ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-yellow-500 hover:text-white'}`}
+                className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg ${awardMenuId === u.id ? 'bg-gray-800 text-white shadow-gray-500/20' : 'bg-yellow-500 text-white shadow-yellow-500/20 hover:scale-105'}`}
               >
-                <Trophy size={14} /> {awardMenuId === u.id ? 'Close' : 'Award Achievement'}
+                <Trophy size={16} /> {awardMenuId === u.id ? 'Close Panel' : 'Award Prestige'}
               </button>
             </div>
 
             {awardMenuId === u.id && (
-              <div className="p-8 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl animate-in zoom-in-95 duration-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {achievements.map(a => {
-                  const isOwned = u.achievement_ids?.includes(a.id);
-                  return (
-                    <button 
-                      key={a.id} 
-                      disabled={isOwned}
-                      onClick={() => handleAward(u.id, a.id)} 
-                      className={`text-left p-4 rounded-xl transition-all border ${
-                        isOwned 
-                          ? 'bg-green-500/5 border-green-500/20 opacity-60 cursor-not-allowed' 
-                          : 'bg-white dark:bg-black/20 border-transparent hover:border-[var(--accent)] shadow-sm'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <p className={`text-xs font-black ${isOwned ? 'text-green-600' : ''}`}>{a.name}</p>
-                        {isOwned && <CheckCircle2 size={12} className="text-green-500" />}
-                      </div>
-                      <p className="text-[10px] text-gray-400 font-medium leading-tight">{a.description}</p>
-                    </button>
-                  );
-                })}
+              <div className="p-10 bg-[var(--input-bg)] border border-[var(--border)] rounded-[32px] animate-in zoom-in-95 duration-200">
+                <div className="flex items-center gap-3 mb-8 border-b border-[var(--border)] pb-6">
+                  <div className="p-2 bg-yellow-500/10 text-yellow-600 rounded-lg"><Award size={18} /></div>
+                  <h5 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Grant Milestone Achievement</h5>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {achievements.map(a => {
+                    const isOwned = u.achievement_ids?.includes(a.id);
+                    return (
+                      <button 
+                        key={a.id} 
+                        disabled={isOwned}
+                        onClick={() => handleAward(u.id, a.id)} 
+                        className={`text-left p-6 rounded-2xl transition-all border shadow-sm ${
+                          isOwned 
+                            ? 'bg-green-500/5 border-green-500/20 opacity-60 cursor-not-allowed' 
+                            : 'bg-white dark:bg-black/20 border-transparent hover:border-[var(--accent)] hover:scale-[1.02]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className={`text-sm font-bold ${isOwned ? 'text-green-600' : ''}`}>{a.name}</p>
+                          {isOwned && <CheckCircle2 size={14} className="text-green-500" />}
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-medium leading-relaxed">{a.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
