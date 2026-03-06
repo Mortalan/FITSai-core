@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>FITSai Complete Feature Guide</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #222; line-height: 1.6; font-size: 14px; }
+h1 { color: #1a1a2e; border-bottom: 3px solid #6C63FF; padding-bottom: 10px; }
+h2 { color: #16213e; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 30px; }
+h3 { color: #0f3460; }
+table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+th { background: #f0f0f0; font-weight: 600; }
+tr:nth-child(even) { background: #f9f9f9; }
+code { background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-size: 13px; }
+strong { color: #1a1a2e; }
+hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+</style>
+</head><body><h1>FITSai Complete Feature Guide</h1>
+<p><strong>Version:</strong> 2.0 | <strong>Last Updated:</strong> 2026-02-28
+<strong>Product:</strong> FITSai (Friendly Intelligent Technical Support AI)
+<strong>Internal Codename:</strong> FELICIA (Friendly Engine for Logic, Insight, Coordination, Information &amp; Assistance)</p>
+<hr />
+<h2>1. AI Chat</h2>
+<p>The core feature. Ask FITSai anything and get an intelligent, personality-driven response.</p>
+<p><strong>How to use:</strong>
+- Type your question in the chat box and press Enter
+- Attach images (screenshot analysis), PDFs, DOCX, or TXT files using the paperclip button
+- Drag and drop files directly into the chat
+- Use your phone camera to capture and send photos
+- Give thumbs up/down feedback to help FITSai learn
+- Edit and re-ask previous messages in a thread
+- Each question earns XP towards your level</p>
+<p><strong>Smart AI Routing:</strong>
+- <strong>Simple questions</strong> → llama3.1:8b (local GPU via Ollama) — fast, free, private
+- <strong>Coding questions</strong> → deepseek-coder-v2 (local GPU via Ollama)
+- <strong>Complex reasoning / images</strong> → GPT-5.2 (OpenAI API)
+- <strong>Knowledge base matches</strong> → RAG synthesis through local model, GPT-5.2 fallback
+- <strong>Budget protection</strong> → Auto-fallback to cheaper models if monthly budget limit approaches</p>
+<p><strong>Self-Correction:</strong> Every local model answer is graded in the background by GPT. Corrections are saved and used to improve future responses.</p>
+<p><strong>Conversation Features:</strong>
+- Threaded replies — continue any conversation
+- Search across all chat history (Ctrl+K)
+- Pin conversations to sidebar top
+- Export chats as JSON or TXT
+- Share/copy entire conversation threads
+- Chat templates (Ctrl+T) — predefined and AI-generated based on your patterns</p>
+<hr />
+<h2>2. Voice Chat</h2>
+<p>Talk to FITSai using your microphone instead of typing.</p>
+<p><strong>How to use:</strong>
+- Click the microphone icon in the chat input
+- Allow browser microphone access when prompted
+- Speak your question clearly
+- FITSai transcribes your speech, processes it, and speaks the answer back</p>
+<p><strong>Technology:</strong> OpenAI Whisper (speech-to-text), OpenAI TTS (text-to-speech), real-time WebSocket communication.</p>
+<hr />
+<h2>3. Smart Colleague Intelligence</h2>
+<p>FITSai goes beyond Q&amp;A — it acts like a smart colleague who knows your team.</p>
+<h3>Morning Briefing</h3>
+<p>Personalized daily greeting when you open chat:
+- Your login streak and level progress
+- Overdue reminders
+- Achievement progress (closest unlockable)
+- Follow-up on past unresolved issues ("Did that DNS fix work?")
+- Proactive nudges ("You asked about VLANs 3 times — want a cheat sheet?")
+- Personality-aware tips</p>
+<h3>Frustration Detection</h3>
+<p>FITSai detects frustration from message tone (caps, punctuation, keywords) and responds with personality-appropriate empathy before jumping to solutions.</p>
+<h3>Communication Style Adaptation</h3>
+<p>Learns your preferences (brevity, formality, technical depth) from your feedback patterns and adapts responses automatically over time.</p>
+<h3>Peer Knowledge Linking</h3>
+<p>When you ask something a colleague has already solved, FITSai mentions it: "Thabo documented a fix for this last week."</p>
+<hr />
+<h2>4. 30 Personality Modes</h2>
+<p>Change how FITSai communicates with 30 distinct styles. New personalities unlock as you level up.</p>
+<p><strong>How to switch:</strong> Profile page → Personality Selector, or Settings → Display tab.</p>
+<p><strong>Some favorites:</strong>
+- <strong>Professional Maven</strong> — Polished, efficient, corporate-friendly (default)
+- <strong>Sarcastic Sidekick</strong> — Witty, dry humor, playfully cynical
+- <strong>Drill Sergeant</strong> — Tough love and accountability
+- <strong>Noir Detective</strong> — Dramatic 1940s private eye vibes
+- <strong>Mad Scientist</strong> — Experimentally-minded and delightfully unhinged
+- <strong>Zen Minimalist</strong> — Calm, concise, mindful responses
+- <strong>Chaotic Gremlin</strong> — Playful chaos and unpredictable energy
+- <strong>Nerdy Explainer</strong> — Loves details, references, and tangents
+- <strong>Cool Aunt</strong> — Relaxed and supportive
+- <strong>Existential Overthinker</strong> — Deep philosophical questions about everything</p>
+<p>...and 20 more including Academic Scholar, Brutally Honest, Conspiracy Theorist, Game Show Host, Grandmother Wisdom, Hopeless Romantic, Punk Rebel, Southern Charm, and others.</p>
+<p>Personality affects tone and communication style only — not accuracy or knowledge.</p>
+<hr />
+<h2>5. Gamification System</h2>
+<p>Everything you do in FITSai earns XP and progresses your character.</p>
+<h3>XP &amp; Leveling</h3>
+<ul>
+<li>Every chat question earns XP</li>
+<li>Completing achievements awards bonus XP</li>
+<li>50 levels with increasing XP requirements</li>
+</ul>
+<h3>12 Character Classes (by level)</h3>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Class</th>
+<th>Style</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-5</td>
+<td>Kobold</td>
+<td>Scrappy lizard warrior</td>
+</tr>
+<tr>
+<td>6-10</td>
+<td>Goblin</td>
+<td>Sneaky rogue trickster</td>
+</tr>
+<tr>
+<td>11-15</td>
+<td>Troll</td>
+<td>Heavy brute tank</td>
+</tr>
+<tr>
+<td>16-20</td>
+<td>Dwarf</td>
+<td>Stout warrior with golden helmet</td>
+</tr>
+<tr>
+<td>21-25</td>
+<td>Elf</td>
+<td>Ethereal mage with silver circlet</td>
+</tr>
+<tr>
+<td>26-30</td>
+<td>Wizard</td>
+<td>Classic archmage with staff</td>
+</tr>
+<tr>
+<td>31-35</td>
+<td>Phoenix</td>
+<td>Majestic fire bird</td>
+</tr>
+<tr>
+<td>36-40</td>
+<td>Unicorn</td>
+<td>Armored mythical horse</td>
+</tr>
+<tr>
+<td>41-45</td>
+<td>Dragon</td>
+<td>Fearsome dragon</td>
+</tr>
+<tr>
+<td>46-48</td>
+<td>Demigod</td>
+<td>Divine warrior with lightning</td>
+</tr>
+<tr>
+<td>49</td>
+<td>God</td>
+<td>Radiant divine being</td>
+</tr>
+<tr>
+<td>50</td>
+<td>BDFL</td>
+<td>Cosmic emperor</td>
+</tr>
+</tbody>
+</table>
+<h3>Avatar Customization</h3>
+<ul>
+<li>Unlock color schemes, backgrounds, and particle effects as you level up</li>
+<li>Display any unlocked character class avatar in your profile</li>
+<li>10 color schemes (Ocean, Forest, Sunset, Royal, Crimson, Arctic, Shadow, Golden, Rainbow, Cosmic)</li>
+<li>5 background effects (Glow, Border, Trail, Screen, Cosmic)</li>
+</ul>
+<hr />
+<h2>6. Achievements</h2>
+<p>31 achievements across multiple rarities: Common, Rare, Epic, Legendary, and Mythic.</p>
+<p><strong>How to view:</strong> Click "Achievements" in the navigation bar.</p>
+<p><strong>Types:</strong>
+- <strong>Activity-based:</strong> First Steps (first question), Curious Mind (25 questions), Knowledge Seeker (100 questions)
+- <strong>Streak-based:</strong> Consistent Learner (7-day streak), Dedicated User (30-day streak)
+- <strong>Social:</strong> Helper (give feedback), Feature Suggester, Department Champion
+- <strong>Hidden/Secret:</strong> Discover these by exploring FITSai's features
+- <strong>Admin-awarded:</strong> Special achievements can be granted by admins in God Mode</p>
+<p>Each achievement awards XP and may unlock titles you can equip next to your name on the leaderboard.</p>
+<hr />
+<h2>7. Leaderboard</h2>
+<p>See how you rank against colleagues.</p>
+<p><strong>Displays:</strong> Rank, name, level, character class, XP, equipped title, achievement count.</p>
+<p><strong>Monthly Champions:</strong> The top-ranked user each month receives special recognition with a golden crown frame and Hall of Fame entry.</p>
+<hr />
+<h2>8. Reminders</h2>
+<p>Natural language reminder system integrated into chat.</p>
+<p><strong>How to use:</strong> Just say it in chat:
+- "Remind me to call John at 3pm"
+- "Remind me to check the backup in 1 hour and 30 minutes"
+- "Remind me every Monday to review tickets"</p>
+<p><strong>Features:</strong>
+- Popup notifications (even when tab is not focused via desktop notifications)
+- 25 notification sounds across 5 categories (Nice, Cute, IT, Wacky, Classic)
+- Overdue reminders stay visible until dismissed or completed
+- Bulk management — multi-select with checkboxes, bulk complete/delete
+- History tab showing completed/dismissed reminders with recreate button
+- Snooze options (5 min, 15 min, 1 hour, tomorrow)</p>
+<hr />
+<h2>9. Documents</h2>
+<p>Upload files for FITSai to learn from and analyze.</p>
+<h3>Knowledge Base Upload</h3>
+<ul>
+<li>Click "Documents" in navigation → Upload files</li>
+<li>Supported: PDF, Word (.docx), text files, images</li>
+<li>Content is indexed into the knowledge base for RAG retrieval</li>
+<li>FITSai references your documents when answering questions</li>
+<li>Department-scoped documents for team-specific knowledge</li>
+</ul>
+<h3>In-Chat Document Analysis</h3>
+<ul>
+<li>Attach a document directly in chat using the paperclip button</li>
+<li>Analysis modes: Summarize, Analyze, Extract key points, Memorize</li>
+<li>Supports PDF, DOCX, TXT, and images</li>
+</ul>
+<h3>Document Conversion</h3>
+<ul>
+<li>Convert DOCX/XLSX to PDF using LibreOffice backend</li>
+</ul>
+<hr />
+<h2>10. Projects</h2>
+<p>Team collaboration spaces with shared conversations.</p>
+<p><strong>Features:</strong>
+- Create projects with title and description
+- Add/remove team members by email
+- Project-scoped chat — all members see the same conversations
+- Overview tab with activity stats
+- Archive completed projects</p>
+<hr />
+<h2>11. Profile &amp; Settings</h2>
+<p>Your profile, stats, and all settings in one place.</p>
+<p><strong>Profile sections:</strong>
+- Edit name and email
+- Character avatar with class, level, and XP bar
+- Personality selector
+- Feature suggestions
+- Reminder management</p>
+<p><strong>Settings tabs:</strong>
+- <strong>Notifications:</strong> Toggle reminder popups, sounds, email notifications. Severity filter. Auto-dismiss.
+- <strong>Security:</strong> Change password.
+- <strong>Display:</strong> Theme (dark/light), personality mode.
+- <strong>Sessions:</strong> View active sessions, logout from other devices.</p>
+<hr />
+<h2>12. Keyboard Shortcuts</h2>
+<p>Press <code>?</code> anywhere to see all shortcuts.</p>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ctrl+K</td>
+<td>Search conversations</td>
+</tr>
+<tr>
+<td>Ctrl+N</td>
+<td>New conversation</td>
+</tr>
+<tr>
+<td>Ctrl+T</td>
+<td>Open chat templates</td>
+</tr>
+<tr>
+<td>Ctrl+E</td>
+<td>Export current chat</td>
+</tr>
+<tr>
+<td>1-4</td>
+<td>Navigate pages (Chat, Projects, Docs, Profile)</td>
+</tr>
+<tr>
+<td>?</td>
+<td>Open shortcuts modal</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>13. Dark/Light Theme</h2>
+<p>Toggle between dark and light mode. Persists across sessions.</p>
+<p><strong>How to use:</strong> Click the Sun/Moon icon in the navigation bar.</p>
+<hr />
+<h2>14. FITSai CLI (Command Line Tool)</h2>
+<p>Interactive terminal tool for developers and power users — like Claude Code.</p>
+<p><strong>Commands:</strong>
+- <code>fitsai</code> — Launch interactive chat mode (REPL)
+- <code>fitsai login</code> — Authenticate with your FITS credentials
+- <code>fitsai chat "your question"</code> — Quick one-shot question
+- <code>fitsai sessions --list</code> — View saved chat sessions</p>
+<p><strong>Built-in tools:</strong> Read files, edit files, write files, run bash commands, search with glob/grep. All executed locally with results sent to AI for context.</p>
+<p><strong>Platforms:</strong> Linux (x64), Debian/Ubuntu (.deb package). Windows installer planned.</p>
+<hr />
+<h2>15. Onboarding</h2>
+<p>8-step interactive wizard for new users covering chat, personality, achievements, projects, voice, reminders, and documents. Can be replayed via "Recap Tour" button.</p>
+<hr />
+<h2>16. God Mode (Admin Panel)</h2>
+<p>Admin dashboard available to admins and users level 46+. Access via the lightning bolt icon.</p>
+<h3>Dashboard</h3>
+<ul>
+<li>System stats: total users, questions, documents, average level, disk/memory usage</li>
+<li>Service status indicators with health checks</li>
+<li>Most active users today</li>
+<li>Git update check — shows when undeployed commits exist</li>
+</ul>
+<h3>User Management</h3>
+<ul>
+<li>Search and view all users</li>
+<li>Edit user details, roles, levels</li>
+<li>Award/revoke XP manually</li>
+<li>Create new users</li>
+</ul>
+<h3>Achievement Management</h3>
+<ul>
+<li>Search all 31 achievements</li>
+<li>Award or revoke achievements for any user</li>
+<li>Rarity legend and status indicators</li>
+</ul>
+<h3>Code Health Monitoring</h3>
+<ul>
+<li>Automated code scanning for issues</li>
+<li>Severity levels: Critical, High, Medium, Low</li>
+<li>Maintenance queue with schedule-fix workflow</li>
+</ul>
+<h3>Feature Suggestions</h3>
+<ul>
+<li>View user-submitted feature requests</li>
+<li>Status tracking (pending, planned, completed)</li>
+</ul>
+<h3>Health Monitoring</h3>
+<ul>
+<li>Background checks every 5 minutes (database, Ollama, disk, memory)</li>
+<li>Email alerts with cooldown and recovery notifications</li>
+<li>SMTP configuration</li>
+</ul>
+<h3>Development Roadmap</h3>
+<ul>
+<li>Interactive roadmap panel with status updates</li>
+<li>Categories: High Priority, Medium Priority, Improvements, Nice to Have</li>
+</ul>
+<h3>FELICIA Documentation Library</h3>
+<ul>
+<li>Browse and download project documents (brochures, playbooks, technical docs)</li>
+<li>Upload new documents with title, description, and category</li>
+<li>Character Avatar Manager — upload illustrations for all 12 RPG character classes</li>
+<li>Categories: Marketing, Technical, Assets</li>
+</ul>
+<h3>System Tools</h3>
+<ul>
+<li><strong>Bash:</strong> Execute server commands directly</li>
+<li><strong>Create File:</strong> Write files to the server</li>
+<li><strong>Services:</strong> Start/stop/restart systemd services</li>
+</ul>
+<h3>Self-Correction Memory</h3>
+<ul>
+<li>View grading statistics (total graded, pass rate, corrections)</li>
+<li>Recent corrections list</li>
+</ul>
+<h3>Model Evolution Pipeline</h3>
+<ul>
+<li>Auto-benchmark local models monthly</li>
+<li>GPT-4o-mini judge scoring</li>
+<li>Promote better models automatically</li>
+</ul>
+<hr />
+<h2>17. Budget Tracking</h2>
+<p>Monitor AI API usage and costs (admin only).</p>
+<p><strong>Displays:</strong>
+- Current month spend vs. $30 budget
+- Cost breakdown by model (GPT-5.2, gpt-4o, gpt-4o-mini)
+- Daily usage trends and projections
+- Answer source breakdown (Local AI, Cloud AI, RAG)
+- Top users by query count
+- Feedback statistics</p>
+<p><strong>Budget protection:</strong> Automatic model fallback when approaching budget limit:
+- Under 80% → GPT-5.2 (full power)
+- 80-95% → gpt-4o (still excellent, cheaper)
+- Over 95% → gpt-4o-mini (cheapest, functional)</p>
+<hr />
+<h2>18. Security</h2>
+<ul>
+<li>JWT authentication with secure token storage</li>
+<li>Password reset via email token</li>
+<li>Role-based access control (User, Manager, Admin)</li>
+<li>API rate limiting (login: 10/min, register: 5/min, general: 200/min)</li>
+<li>All local AI queries stay on-premises — no data leaves the network</li>
+</ul>
+<hr />
+<h2>Architecture Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>React 19 + TypeScript + Tailwind CSS + Vite</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Python FastAPI + SQLAlchemy (async)</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>PostgreSQL (Docker)</td>
+</tr>
+<tr>
+<td>Local AI</td>
+<td>Ollama (llama3.1:8b, deepseek-coder-v2) on NVIDIA RTX 4060</td>
+</tr>
+<tr>
+<td>Cloud AI</td>
+<td>OpenAI GPT-5.2 (with auto-fallback)</td>
+</tr>
+<tr>
+<td>Voice</td>
+<td>OpenAI Whisper (STT) + OpenAI TTS</td>
+</tr>
+<tr>
+<td>Knowledge</td>
+<td>ChromaDB vector store for RAG</td>
+</tr>
+<tr>
+<td>Server</td>
+<td>Ubuntu 24.04 LTS, AMD Ryzen 7 5700, 32GB RAM</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>This document is auto-maintained alongside the FITSai codebase. For the latest version, download from God Mode → FELICIA Documentation.</em></p></body></html>

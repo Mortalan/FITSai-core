@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, ShieldAlert, Palette, DollarSign, Users, FileText, Award, Trophy, 
-  Bell, Edit2, Save, Smile, BookOpen, Mic, FileCode2, ChevronRight, Zap
+  Bell, Edit2, Save, Smile, BookOpen, Mic, FileCode2, ChevronRight, Zap, Sparkles
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { GodMode } from './GodMode';
@@ -26,7 +26,10 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
 
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
-    equipped_title: user?.equipped_title || ''
+    equipped_title: user?.equipped_title || '',
+    avatar_emoji: user?.special_effects?.emoji || '🤖',
+    avatar_color: user?.special_effects?.color || '#3b82f6',
+    avatar_background: user?.avatar_customization?.background || 'none'
   });
 
   useEffect(() => {
@@ -42,9 +45,9 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
     try {
       const res = await updateProfile(profileForm);
       updateUser(res.user);
-      setSaveStatus('Changes saved!');
+      setSaveStatus('Identity Synced!');
       setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err) { alert('Update failed'); }
+    } catch (err) { alert('Sync failed'); }
     setLoading(false);
   };
 
@@ -85,12 +88,19 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
               <ProgressDashboard />
               <div className="bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] p-10 shadow-sm">
                 <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-8"><Avatar size={120} /><div className="space-y-2"><div className="flex items-center gap-3"><h2 className="text-4xl font-black tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div><p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p><p className="text-sm text-gray-500 font-medium">{user?.email}</p></div></div>
+                  <div className="flex items-center gap-8">
+                    <Avatar size={120} />
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3"><h2 className="text-4xl font-black tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div>
+                      <p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p>
+                      <p className="text-sm text-gray-500 font-medium">{user?.email}</p>
+                    </div>
+                  </div>
                   {saveStatus && <span className="text-green-500 text-xs font-black uppercase tracking-widest animate-bounce">{saveStatus}</span>}
                 </div>
-                <form onSubmit={handleProfileUpdate} className="space-y-8">
+                <form onSubmit={handleProfileUpdate} className="space-y-10">
                   <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Display Identity</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none focus:ring-4 focus:ring-[var(--accent)]/10 font-bold" /></div>
+                    <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Display Identity</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none font-bold" /></div>
                     <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Active Title</label>
                       <select value={profileForm.equipped_title} onChange={e => setProfileForm({...profileForm, equipped_title: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-6 outline-none font-bold">
                         <option value="">No Title Equipped</option>
@@ -98,13 +108,40 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
                       </select>
                     </div>
                   </div>
-                  <div className="flex justify-end pt-4"><button type="submit" disabled={loading} className="bg-[var(--accent)] text-white px-8 py-3.5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[var(--accent)]/30 hover:opacity-90 transition-all">Synchronize Profile</button></div>
+
+                  <div className="space-y-6">
+                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2"><Sparkles size={14} className="text-yellow-500" /> Visual Identity Customization</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Avatar Icon</label>
+                        <input type="text" value={profileForm.avatar_emoji} onChange={e => setProfileForm({...profileForm, avatar_emoji: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 text-center text-2xl" placeholder="e.g. 🤖" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Aura Color</label>
+                        <div className="flex gap-2">
+                          <input type="color" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="h-[60px] w-20 bg-transparent border-none outline-none cursor-pointer" />
+                          <input type="text" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 text-xs font-mono" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase text-gray-400 ml-1">Background Effect</label>
+                        <select value={profileForm.avatar_background} onChange={e => setProfileForm({...profileForm, avatar_background: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl py-4 px-4 font-bold text-sm">
+                          <option value="none">Standard (None)</option>
+                          <option value="glow">Level 10: Subtle Glow</option>
+                          <option value="border">Level 20: Tech Border</option>
+                          <option value="cosmic">Level 40: Cosmic Aura</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-4"><button type="submit" disabled={loading} className="bg-[var(--accent)] text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-[var(--accent)]/30 hover:scale-105 transition-all">Synchronize Production Identity</button></div>
                 </form>
               </div>
             </div>
           )}
-          {activeTab === 'sops' && <DocumentLibrary forceCategory="SOP" />}
-          {activeTab === 'docs' && <DocumentLibrary forceCategory="GUIDE" />}
+          {activeTab === 'sops' && <DocumentLibrary type="SOP" />}
+          {activeTab === 'docs' && <DocumentLibrary type="KB" />}
           {activeTab === 'meetings' && <MeetingTranscription />}
           {activeTab === 'achievements' && <Achievements />}
           {activeTab === 'leaderboard' && <Leaderboard />}

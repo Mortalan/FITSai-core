@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FITSai - AI-Powered IT Support That Learns</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    color: #1a1a2e;
+    line-height: 1.6;
+    background: #fff;
+  }
+  .clearfix::after { content: ''; display: table; clear: both; }
+
+  /* PAGE 1: COVER */
+  .cover {
+    page-break-after: always;
+    height: 297mm;
+    background: #191537;
+    color: white;
+    padding: 55px 50px 40px;
+    position: relative;
+  }
+  .cover-logo {
+    font-size: 42pt;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #8b7ed8;
+    margin-bottom: 5px;
+  }
+  .cover-sub {
+    font-size: 10pt;
+    color: #6b6b8d;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 55px;
+  }
+  .cover-headline {
+    font-size: 30pt;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 20px;
+    color: #fff;
+  }
+  .cover-headline em {
+    font-style: normal;
+    color: #8b7ed8;
+  }
+  .cover-desc {
+    font-size: 12.5pt;
+    color: #a0a0c0;
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 55px;
+  }
+  .cover-stats { margin-bottom: 55px; }
+  .cover-stats table { border-collapse: collapse; }
+  .cover-stats td {
+    text-align: center;
+    padding: 0 25px 0 0;
+    vertical-align: top;
+  }
+  .stat-num {
+    font-size: 34pt;
+    font-weight: 800;
+    color: #8b7ed8;
+    line-height: 1.2;
+  }
+  .stat-label {
+    font-size: 8pt;
+    color: #6b6b8d;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .cover-bottom {
+    position: absolute;
+    bottom: 40px;
+    left: 50px;
+    right: 50px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+  }
+  .cover-bottom table { width: 100%; }
+  .cta-btn {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 11px 26px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 11pt;
+    text-decoration: none;
+  }
+  .cta-contact {
+    font-size: 10pt;
+    color: #6b6b8d;
+    text-align: right;
+  }
+  .cta-contact strong { color: #a0a0c0; }
+
+  /* PAGES */
+  .page {
+    page-break-after: always;
+    padding: 45px 50px;
+    min-height: 297mm;
+    position: relative;
+  }
+  .page-last { page-break-after: avoid; }
+  .page-title {
+    font-size: 24pt;
+    font-weight: 700;
+    color: #302b63;
+    margin-bottom: 4px;
+  }
+  .page-subtitle {
+    font-size: 11pt;
+    color: #888;
+    margin-bottom: 30px;
+  }
+
+  /* PROBLEM CARDS */
+  .card-row { margin-bottom: 16px; }
+  .card-half {
+    width: 48%;
+    float: left;
+    padding: 18px 20px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .card-half:nth-child(odd) { margin-right: 4%; }
+  .card-half.problem {
+    background: #fdf5f5;
+    border: 1px solid #f0dede;
+  }
+  .card-half.problem h4 { font-size: 11pt; color: #c0392b; margin-bottom: 5px; }
+  .card-half.problem p { font-size: 9.5pt; color: #555; }
+  .card-half.solution {
+    background: #f5f3ff;
+    border: 1px solid #e0ddf5;
+  }
+  .card-half.solution h4 { font-size: 11pt; color: #302b63; margin-bottom: 5px; }
+  .card-half.solution p { font-size: 9.5pt; color: #555; }
+  .metric {
+    display: inline-block;
+    margin-top: 8px;
+    background: #667eea;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 8.5pt;
+    font-weight: 600;
+  }
+
+  .solution-arrow {
+    text-align: center;
+    font-size: 16pt;
+    color: #667eea;
+    font-weight: 700;
+    margin: 8px 0 18px;
+    clear: both;
+  }
+
+  /* SCREENSHOT PLACEHOLDER */
+  .screenshot {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 35px 20px;
+    text-align: center;
+    color: #aaa;
+    font-size: 9.5pt;
+    background: #fafafa;
+    margin: 12px 0;
+    clear: both;
+  }
+  .screenshot-label { font-weight: 700; color: #888; font-size: 10pt; margin-bottom: 3px; }
+
+  /* PAGE 3: FEATURES */
+  .feature-hero {
+    background: #302b63;
+    color: white;
+    border-radius: 10px;
+    padding: 22px 28px;
+    margin-bottom: 22px;
+  }
+  .feature-hero h3 { font-size: 16pt; margin-bottom: 8px; }
+  .feature-hero p { font-size: 9.5pt; opacity: 0.88; line-height: 1.55; margin-bottom: 12px; }
+  .fh-stats-table td {
+    text-align: center;
+    padding: 0 18px 0 0;
+    color: white;
+  }
+  .fh-num { font-size: 20pt; font-weight: 700; }
+  .fh-label { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; }
+
+  .feature-card {
+    width: 48%;
+    float: left;
+    padding: 18px 20px;
+    border-radius: 10px;
+    border: 1px solid #e8e6f0;
+    margin-bottom: 14px;
+    min-height: 115px;
+  }
+  .feature-card:nth-child(odd) { margin-right: 4%; }
+  .feature-card h4 { font-size: 11.5pt; color: #302b63; margin-bottom: 5px; }
+  .feature-card p { font-size: 9pt; color: #555; line-height: 1.5; }
+
+  .screenshot-half {
+    width: 48%;
+    float: left;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 25px 15px;
+    text-align: center;
+    color: #aaa;
+    font-size: 9pt;
+    background: #fafafa;
+  }
+  .screenshot-half:first-child { margin-right: 4%; }
+
+  /* PAGE 4 */
+  .audience-row { margin-bottom: 22px; }
+  .audience-card {
+    width: 31%;
+    float: left;
+    margin-right: 3.5%;
+    padding: 18px;
+    border-radius: 10px;
+    border: 1px solid #e8e6f0;
+    text-align: center;
+    min-height: 100px;
+  }
+  .audience-card:last-child { margin-right: 0; }
+  .audience-card h4 { font-size: 11pt; color: #302b63; margin-bottom: 5px; }
+  .audience-card p { font-size: 8.5pt; color: #777; }
+
+  .deploy-card {
+    width: 48%;
+    float: left;
+    padding: 18px 20px;
+    border-radius: 10px;
+    background: #f8f7ff;
+    border: 1px solid #e8e6f0;
+    margin-bottom: 14px;
+  }
+  .deploy-card:nth-child(odd) { margin-right: 4%; }
+  .deploy-card h4 { font-size: 11.5pt; color: #302b63; margin-bottom: 8px; }
+  .deploy-card ul { list-style: none; padding: 0; }
+  .deploy-card li {
+    font-size: 9.5pt;
+    color: #555;
+    padding: 3px 0 3px 16px;
+    position: relative;
+  }
+  .deploy-card li::before {
+    content: '\2713';
+    position: absolute;
+    left: 0;
+    color: #667eea;
+    font-weight: 700;
+  }
+
+  .final-cta {
+    background: #191537;
+    color: white;
+    border-radius: 14px;
+    padding: 35px 40px;
+    text-align: center;
+    margin-top: 20px;
+    clear: both;
+  }
+  .final-cta h3 { font-size: 20pt; font-weight: 700; margin-bottom: 8px; }
+  .final-cta p {
+    font-size: 10.5pt;
+    color: #a0a0c0;
+    margin-bottom: 22px;
+  }
+  .final-cta table { margin: 0 auto; border-collapse: collapse; }
+  .final-cta td { padding: 0 25px; text-align: center; }
+  .final-cta .fc-label {
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6b6b8d;
+  }
+  .final-cta .fc-value {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #a78bfa;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== PAGE 1: COVER ==================== -->
+<div class="cover">
+  <div class="cover-logo">FITSai</div>
+  <div class="cover-sub">AI-Powered IT Support</div>
+
+  <div class="cover-headline">
+    Stop answering the<br>same questions.<br>
+    <em>Let your AI handle it.</em>
+  </div>
+
+  <div class="cover-desc">
+    FITSai is a self-hosted AI assistant that learns your company's knowledge,
+    routes queries to the fastest model, and keeps your team engaged with
+    gamified progression. Deploy on your own hardware. Keep your data in-house.
+  </div>
+
+  <div class="cover-stats">
+    <table>
+      <tr>
+        <td><div class="stat-num">70%</div><div class="stat-label">Less Repetitive Q&A</div></td>
+        <td><div class="stat-num">30</div><div class="stat-label">AI Personalities</div></td>
+        <td><div class="stat-num">&lt;3s</div><div class="stat-label">Response Time</div></td>
+        <td><div class="stat-num">$0</div><div class="stat-label">Per Local Query</div></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="cover-bottom">
+    <table>
+      <tr>
+        <td><span class="cta-btn">Book a Demo</span></td>
+        <td class="cta-contact">
+          <strong>info@fitsai.com</strong><br>
+          www.fitsai.com
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== PAGE 2: PROBLEM / SOLUTION ==================== -->
+<div class="page">
+  <div class="page-title">The Problem</div>
+  <div class="page-subtitle">Sound familiar?</div>
+
+  <div class="card-row clearfix">
+    <div class="card-half problem">
+      <h4>Knowledge Trapped in People's Heads</h4>
+      <p>When your best engineer leaves, their solutions leave with them. Tribal knowledge never gets documented.</p>
+    </div>
+    <div class="card-half problem">
+      <h4>Same Questions, Over and Over</h4>
+      <p>"How do I reset my password?" "What's the VPN setup?" Your team spends hours on questions that have been answered before.</p>
+    </div>
+  </div>
+  <div class="card-row clearfix">
+    <div class="card-half problem">
+      <h4>AI Tools Nobody Actually Uses</h4>
+      <p>You deployed ChatGPT/Copilot, but adoption dropped after week one. No engagement. No incentive to keep using it.</p>
+    </div>
+    <div class="card-half problem">
+      <h4>Data Leaving Your Network</h4>
+      <p>Cloud-only AI means your company knowledge, conversations, and documents are processed on someone else's servers.</p>
+    </div>
+  </div>
+
+  <div class="solution-arrow">FITSai solves all four.</div>
+
+  <div class="card-row clearfix">
+    <div class="card-half solution">
+      <h4>Knowledge Base That Grows</h4>
+      <p>Upload documents, approve good answers, and FITSai builds a searchable knowledge base. When someone leaves, their answers stay.</p>
+      <div class="metric">Answers get smarter over time</div>
+    </div>
+    <div class="card-half solution">
+      <h4>Instant Answers From Your Own Docs</h4>
+      <p>RAG-powered search finds the answer in your company's documents and synthesises a clear response. No more digging through SharePoint.</p>
+      <div class="metric">85%+ confidence matching</div>
+    </div>
+  </div>
+  <div class="card-row clearfix">
+    <div class="card-half solution">
+      <h4>Gamification That Drives Adoption</h4>
+      <p>50 levels, 31 achievements, 30 personalities, leaderboards. Your team actually wants to use it because using it is rewarding.</p>
+      <div class="metric">RPG-style progression</div>
+    </div>
+    <div class="card-half solution">
+      <h4>Self-Hosted, On Your Hardware</h4>
+      <p>Runs on a single server with a consumer GPU. Simple queries handled locally at zero API cost. Your data never leaves your network.</p>
+      <div class="metric">$0 per local query</div>
+    </div>
+  </div>
+
+  <div class="screenshot">
+    <div class="screenshot-label">SCREENSHOT: Chat Interface</div>
+    Show the main chat UI with a conversation thread, the 3D avatar, and a knowledge base answer
+  </div>
+</div>
+
+<!-- ==================== PAGE 3: KEY FEATURES ==================== -->
+<div class="page">
+  <div class="page-title">What Makes FITSai Different</div>
+  <div class="page-subtitle">Enterprise AI with personality, gamification, and self-hosted privacy</div>
+
+  <div class="feature-hero">
+    <h3>Smart AI Routing</h3>
+    <p>FITSai automatically picks the best model for each question. Simple queries run on your local GPU for free. Complex reasoning goes to GPT-4o-mini. Coding questions go to a specialised code model. Every local answer is quality-checked by cloud AI in the background.</p>
+    <table class="fh-stats-table">
+      <tr>
+        <td><div class="fh-num">4</div><div class="fh-label">AI Models</div></td>
+        <td><div class="fh-num">&lt;3s</div><div class="fh-label">Avg Response</div></td>
+        <td><div class="fh-num">Auto</div><div class="fh-label">Quality Check</div></td>
+        <td><div class="fh-num">100%</div><div class="fh-label">Fallback Safety</div></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="clearfix">
+    <div class="feature-card">
+      <h4>&#127918; Gamified Progression</h4>
+      <p>50 levels, 10 character classes (Kobold to God), 31 achievements, equippable titles, and department leaderboards. Every question earns XP.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#127917; 30 AI Personalities</h4>
+      <p>From Professional Maven to Chaotic Gremlin. Personalities unlock as you level up. Same accurate answers, different communication style.</p>
+    </div>
+  </div>
+  <div class="clearfix">
+    <div class="feature-card">
+      <h4>&#129504; Smart Colleague</h4>
+      <p>Morning briefings, frustration detection, communication style adaptation, and peer knowledge linking. FITSai learns how your team works.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#127908; Voice Chat &amp; 3D Avatar</h4>
+      <p>Talk to FITSai with your voice. A holographic 3D avatar responds with real-time animations &mdash; breathing, listening, speaking states.</p>
+    </div>
+  </div>
+  <div class="clearfix">
+    <div class="feature-card">
+      <h4>&#128218; Document Intelligence</h4>
+      <p>Upload PDFs, DOCX, images. FITSai indexes them for semantic search and answers questions using your company's actual documentation.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#128187; CLI for Power Users</h4>
+      <p>FITSai CLI brings AI to your terminal &mdash; like Claude Code but connected to your company knowledge. Read files, run commands, automate tasks.</p>
+    </div>
+  </div>
+
+  <div class="clearfix" style="margin-top: 12px;">
+    <div class="screenshot-half">
+      <div class="screenshot-label">SCREENSHOT: Leaderboard</div>
+      Avatars, levels, character classes, titles
+    </div>
+    <div class="screenshot-half">
+      <div class="screenshot-label">SCREENSHOT: Personality Picker</div>
+      Grid of 30 personality modes with unlock levels
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 4: AUDIENCE / DEPLOY / CTA ==================== -->
+<div class="page page-last">
+  <div class="page-title">Built For</div>
+  <div class="page-subtitle">Whether you're an IT team, MSP, or any company that wants smarter support</div>
+
+  <div class="audience-row clearfix">
+    <div class="audience-card">
+      <h4>IT Teams &amp; Helpdesks</h4>
+      <p>Reduce ticket volume with instant AI answers from your own documentation. Onboard new hires faster.</p>
+    </div>
+    <div class="audience-card">
+      <h4>MSPs &amp; IT Providers</h4>
+      <p>Offer AI-powered support as a value-add to clients. Self-hosted per client for data isolation.</p>
+    </div>
+    <div class="audience-card">
+      <h4>Any Organisation</h4>
+      <p>Turn company knowledge into an always-available assistant. Gamification drives adoption that sticks.</p>
+    </div>
+  </div>
+
+  <div class="clearfix">
+    <div class="deploy-card">
+      <h4>Deployment</h4>
+      <ul>
+        <li>Self-hosted on your own server</li>
+        <li>Runs on a single machine with consumer GPU</li>
+        <li>Docker + systemd &mdash; standard Linux stack</li>
+        <li>No cloud dependency for local queries</li>
+        <li>Optional OpenAI API for complex reasoning</li>
+      </ul>
+    </div>
+    <div class="deploy-card">
+      <h4>Security &amp; Privacy</h4>
+      <ul>
+        <li>Your data stays on your network</li>
+        <li>JWT authentication with role-based access</li>
+        <li>Simple queries never leave your server</li>
+        <li>No training on your data by third parties</li>
+        <li>Soft-delete &mdash; no accidental data loss</li>
+      </ul>
+    </div>
+  </div>
+  <div class="clearfix">
+    <div class="deploy-card">
+      <h4>Minimum Requirements</h4>
+      <ul>
+        <li>Ubuntu 22.04+ / any modern Linux</li>
+        <li>16 GB RAM</li>
+        <li>NVIDIA GPU with 8+ GB VRAM</li>
+        <li>50 GB storage</li>
+      </ul>
+    </div>
+    <div class="deploy-card">
+      <h4>What's Included</h4>
+      <ul>
+        <li>Full web UI (React + TypeScript)</li>
+        <li>Backend API (FastAPI + PostgreSQL)</li>
+        <li>Local AI models via Ollama</li>
+        <li>CLI tool for power users</li>
+        <li>Admin dashboard (God Mode)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="final-cta">
+    <h3>Ready to see FITSai in action?</h3>
+    <p>Book a live demo and see how FITSai can reduce repetitive questions,<br>boost team engagement, and keep your data in-house.</p>
+    <table>
+      <tr>
+        <td>
+          <div class="fc-label">Book a Demo</div>
+          <div class="fc-value">demo@fitsai.com</div>
+        </td>
+        <td>
+          <div class="fc-label">Email</div>
+          <div class="fc-value">info@fitsai.com</div>
+        </td>
+        <td>
+          <div class="fc-label">Website</div>
+          <div class="fc-value">www.fitsai.com</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>

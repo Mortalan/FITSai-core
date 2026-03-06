@@ -16,7 +16,8 @@ from app.services.reminder_service import Reminder
 from app.api.v1.suggestions import Suggestion
 from app.models.code_health import CodeScan, CodeIssue
 from app.models.project import Project, ProjectMember
-from app.models.monthly_champion import MonthlyChampion # Import all models here
+from app.models.monthly_champion import MonthlyChampion
+from app.models.notification import Notification, XPEvent # Import all models here
 from app.core.config import settings
 
 config = context.config

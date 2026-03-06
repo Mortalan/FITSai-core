@@ -8,3 +8,4 @@ from .budget import DepartmentBudget, ApiUsage
 
 from .project import Project, ProjectMember
 from .monthly_champion import MonthlyChampion
+from .notification import Notification, XPEvent

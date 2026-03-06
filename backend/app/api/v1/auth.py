@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
 from jose import jwt, JWTError
-from typing import Optional
+from typing import Optional, List
 
 from app.core.database import get_db
 from app.models.user import User
@@ -26,6 +26,7 @@ class ProfileUpdate(BaseModel):
     avatar_color: Optional[str] = None
     active_personality_id: Optional[int] = None
     equipped_title: Optional[str] = None
+    avatar_background: Optional[str] = None
 
 async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
     try:
@@ -37,6 +38,16 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
     user = result.scalar_one_or_none()
     if user is None: raise HTTPException(401)
     return user
+
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    return {
+        "id": user.id, "email": user.email, "name": user.name, "is_superuser": user.is_superuser,
+        "character_class": user.character_class, "xp_total": user.xp_total, "character_level": user.character_level,
+        "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
+        "special_effects": user.special_effects, "avatar_customization": user.avatar_customization,
+        "login_streak": user.login_streak, "unlocked_backgrounds": user.unlocked_backgrounds
+    }
 
 @router.post("/login")
 async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
@@ -52,7 +63,7 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             "character_class": user.character_class, "xp_total": user.xp_total, "character_level": user.character_level,
             "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
             "special_effects": user.special_effects, "avatar_customization": user.avatar_customization,
-            "login_streak": user.login_streak
+            "login_streak": user.login_streak, "unlocked_backgrounds": user.unlocked_backgrounds
         }
     }
 
@@ -60,23 +71,20 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def update_profile(request: ProfileUpdate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     if request.name: user.name = request.name
     if request.equipped_title: user.equipped_title = request.equipped_title
+    
     if request.avatar_emoji or request.avatar_color:
         effects = dict(user.special_effects) if user.special_effects else {}
         if request.avatar_emoji: effects["emoji"] = request.avatar_emoji
         if request.avatar_color: effects["color"] = request.avatar_color
         user.special_effects = effects
+        
+    if request.avatar_background:
+        cust = dict(user.avatar_customization) if user.avatar_customization else {}
+        cust["background"] = request.avatar_background
+        user.avatar_customization = cust
+        
     await db.commit(); await db.refresh(user)
     return {"user": {
         "id": user.id, "name": user.name, "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
         "special_effects": user.special_effects, "avatar_customization": user.avatar_customization
     }}
-
-@router.get("/me")
-async def get_me(user: User = Depends(get_current_user)):
-    return {
-        "id": user.id, "email": user.email, "name": user.name, "is_superuser": user.is_superuser,
-        "character_class": user.character_class, "xp_total": user.xp_total, "character_level": user.character_level,
-        "stats": user.stats, "titles": user.titles, "equipped_title": user.equipped_title,
-        "special_effects": user.special_effects, "avatar_customization": user.avatar_customization,
-        "login_streak": user.login_streak
-    }

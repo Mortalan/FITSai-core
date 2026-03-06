@@ -1,0 +1,122 @@
+[
+  {
+    "id": "fitsai-feature-guide",
+    "filename": "FITSai_Feature_Guide.md",
+    "title": "FITSai Complete Feature Guide",
+    "description": "Comprehensive guide covering all FITSai features \u2014 chat, voice, AI routing, personalities, gamification, achievements, reminders, God Mode, and more.",
+    "category": "Technical",
+    "icon": "book"
+  },
+  {
+    "id": "fitsai-feature-guide-pdf",
+    "filename": "FITSai_Feature_Guide.pdf",
+    "title": "FITSai Complete Feature Guide (PDF)",
+    "description": "Print-ready PDF version of the complete feature guide.",
+    "category": "Technical",
+    "icon": "file-text"
+  },
+  {
+    "id": "fitsai-brochure-pdf",
+    "filename": "FITSai_Brochure.pdf",
+    "title": "FITSai Feature Brochure",
+    "description": "Comprehensive 16-page feature guide covering all FELICIA capabilities, architecture, and admin tools.",
+    "category": "Marketing",
+    "icon": "file-text"
+  },
+  {
+    "id": "fitsai-brochure-html",
+    "filename": "FITSai_Brochure.html",
+    "title": "FITSai Feature Brochure (Source)",
+    "description": "HTML source file for the feature brochure. Edit this to regenerate the PDF.",
+    "category": "Marketing",
+    "icon": "code"
+  },
+  {
+    "id": "fitsai-marketing-pdf",
+    "filename": "FITSai_Marketing.pdf",
+    "title": "FITSai Marketing Brochure",
+    "description": "4-page marketing brochure targeting IT managers, MSPs, and business owners. Print-ready.",
+    "category": "Marketing",
+    "icon": "file-text"
+  },
+  {
+    "id": "fitsai-marketing-html",
+    "filename": "FITSai_Marketing.html",
+    "title": "FITSai Marketing Brochure (Source)",
+    "description": "HTML source file for the marketing brochure.",
+    "category": "Marketing",
+    "icon": "code"
+  },
+  {
+    "id": "migration-playbook",
+    "filename": "playbook.pdf",
+    "title": "Migration Playbook",
+    "description": "Step-by-step server migration and deployment guide.",
+    "category": "Technical",
+    "icon": "book"
+  },
+  {
+    "id": "avatar-v1",
+    "filename": "avfel1.png",
+    "title": "FELICIA Avatar v1",
+    "description": "Original FELICIA avatar image (high resolution).",
+    "category": "Assets",
+    "icon": "image"
+  },
+  {
+    "id": "avatar-v2",
+    "filename": "avfel2.png",
+    "title": "FELICIA Avatar v2",
+    "description": "Updated FELICIA avatar image (high resolution).",
+    "category": "Assets",
+    "icon": "image"
+  },
+  {
+    "id": "holographic-avatar-summary",
+    "filename": "HOLOGRAPHIC_AVATAR_SUMMARY.md",
+    "title": "Holographic Avatar - Summary",
+    "description": "Overview of the holographic avatar system, features, and implementation status.",
+    "category": "Technical",
+    "icon": "book"
+  },
+  {
+    "id": "holographic-avatar-issues",
+    "filename": "HOLOGRAPHIC_AVATAR_ISSUES_LOG.md",
+    "title": "Holographic Avatar - Issues Log",
+    "description": "Known issues, bugs, and troubleshooting notes for the avatar system.",
+    "category": "Technical",
+    "icon": "book"
+  },
+  {
+    "id": "holographic-avatar-deployment",
+    "filename": "HOLOGRAPHIC_AVATAR_DEPLOYMENT_COMPLETE.md",
+    "title": "Holographic Avatar - Deployment Guide",
+    "description": "Complete deployment documentation for the holographic avatar feature.",
+    "category": "Technical",
+    "icon": "book"
+  },
+  {
+    "id": "avatar-spec",
+    "filename": "AVATAR_SPEC.md",
+    "title": "User Avatar Spec - 12 Character Illustrations",
+    "description": "Veo/AI image generation prompts for all 12 RPG character class avatars (Kobold through BDFL). Includes colors, style notes, and file naming.",
+    "category": "Assets",
+    "icon": "image"
+  },
+  {
+    "id": "whitelabel-design-doc",
+    "filename": "WhiteLabel_Design_Doc.md",
+    "title": "White-Label Chatbot Platform \u2014 Design Document",
+    "description": "Comprehensive design document covering user, developer, and hacker perspectives. Includes security checklists, phased build plan, architecture decisions, and attack/defense analysis.",
+    "category": "Technical",
+    "icon": "book"
+  },
+  {
+    "id": "full-roadmap-planner",
+    "filename": "FITSai_Full_Roadmap_Planner.md",
+    "title": "FITSai Full Roadmap Planner",
+    "description": "Complete project planner with all pending features, time estimates, dependencies, technical details, and suggested build schedule. Covers DMS, White-Label, Mobile, Security, and all pending work. 97 completed features listed.",
+    "category": "Technical",
+    "icon": "book"
+  }
+]

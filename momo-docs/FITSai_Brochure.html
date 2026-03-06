@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FITSai - Complete Feature Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 15mm 20mm;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1a1a2e;
+    line-height: 1.6;
+    font-size: 11pt;
+    background: #fff;
+  }
+
+  /* Cover Page */
+  .cover {
+    page-break-after: always;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    color: white;
+    text-align: center;
+    padding: 60px 40px;
+  }
+  .cover h1 {
+    font-size: 52pt;
+    font-weight: 800;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .cover .subtitle {
+    font-size: 14pt;
+    color: #b8b8d4;
+    margin-bottom: 50px;
+    letter-spacing: 2px;
+  }
+  .cover .tagline {
+    font-size: 18pt;
+    color: #e0e0ff;
+    max-width: 600px;
+    line-height: 1.8;
+    margin-bottom: 60px;
+  }
+  .cover .version-info {
+    font-size: 10pt;
+    color: #8888aa;
+    border-top: 1px solid #444;
+    padding-top: 20px;
+    margin-top: auto;
+  }
+
+  /* Section headers */
+  .section-header {
+    page-break-before: always;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 30px 40px;
+    margin: 0 -20mm;
+    margin-top: -15mm;
+    padding-left: calc(20mm + 10px);
+    padding-right: calc(20mm + 10px);
+    margin-bottom: 25px;
+  }
+  .section-header h2 {
+    font-size: 24pt;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  .section-header p {
+    font-size: 11pt;
+    opacity: 0.9;
+  }
+
+  /* Content */
+  h3 {
+    font-size: 14pt;
+    color: #302b63;
+    margin: 20px 0 8px 0;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 4px;
+  }
+  h4 {
+    font-size: 11pt;
+    color: #764ba2;
+    margin: 12px 0 4px 0;
+  }
+  p { margin-bottom: 8px; }
+
+  /* Feature cards */
+  .feature-card {
+    background: #f8f7ff;
+    border-left: 4px solid #667eea;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 12px 0;
+  }
+  .feature-card.admin {
+    border-left-color: #e74c3c;
+    background: #fff5f5;
+  }
+  .feature-card h4 {
+    margin: 0 0 6px 0;
+    font-size: 12pt;
+    color: #302b63;
+  }
+  .feature-card .badge {
+    display: inline-block;
+    font-size: 8pt;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge.user { background: #667eea; }
+  .badge.admin-badge { background: #e74c3c; }
+  .badge.both { background: #27ae60; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px 0;
+    font-size: 10pt;
+  }
+  th {
+    background: #302b63;
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  tr:nth-child(even) { background: #f8f7ff; }
+  tr:hover { background: #eef; }
+
+  /* Two column layout */
+  .two-col {
+    display: flex;
+    gap: 20px;
+    margin: 10px 0;
+  }
+  .two-col > div { flex: 1; }
+
+  /* Highlight box */
+  .highlight {
+    background: linear-gradient(135deg, #667eea15, #764ba215);
+    border: 1px solid #667eea40;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+  }
+  .highlight.warning {
+    background: linear-gradient(135deg, #f39c1215, #e74c3c15);
+    border-color: #f39c1240;
+  }
+
+  /* Lists */
+  ul, ol {
+    margin: 6px 0 10px 20px;
+  }
+  li { margin-bottom: 3px; }
+
+  /* Level progression visual */
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin: 10px 0;
+  }
+  .level-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    background: #f8f7ff;
+    border-radius: 6px;
+    font-size: 9.5pt;
+  }
+  .level-item .emoji { font-size: 14pt; }
+
+  /* Footer */
+  .page-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 8pt;
+    color: #999;
+    padding: 5px;
+  }
+
+  /* Prevent orphans */
+  .feature-card, .highlight, table { page-break-inside: avoid; }
+
+  .toc {
+    page-break-after: always;
+    padding: 40px 20px;
+  }
+  .toc h2 {
+    font-size: 22pt;
+    color: #302b63;
+    margin-bottom: 20px;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 10px;
+  }
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dotted #ccc;
+    font-size: 11pt;
+  }
+  .toc-item.section {
+    font-weight: 700;
+    color: #302b63;
+    margin-top: 12px;
+    font-size: 12pt;
+  }
+  .toc-item.sub { padding-left: 20px; color: #555; }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <h1>FITSai</h1>
+  <div class="subtitle">FRIENDLY INTELLIGENT TECHNICAL SUPPORT AI</div>
+  <div class="tagline">
+    Your company's AI-powered assistant with gamified progression,
+    voice interaction, and intelligent document search.
+  </div>
+  <div style="display: flex; gap: 30px; margin-bottom: 40px;">
+    <div style="text-align: center;">
+      <div style="font-size: 28pt; font-weight: 700;">50</div>
+      <div style="font-size: 9pt; color: #aaa;">Levels</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="font-size: 28pt; font-weight: 700;">30</div>
+      <div style="font-size: 9pt; color: #aaa;">Personalities</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="font-size: 28pt; font-weight: 700;">31</div>
+      <div style="font-size: 9pt; color: #aaa;">Achievements</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="font-size: 28pt; font-weight: 700;">Smart</div>
+      <div style="font-size: 9pt; color: #aaa;">AI Routing</div>
+    </div>
+  </div>
+  <div class="version-info">
+    Complete Feature Guide &bull; February 2026 &bull; Internal Use<br>
+    Codename: FELICIA (Fully Engineered Linguistic Intelligence and Conversational Assistant)
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Contents</h2>
+  <div class="toc-item section">1. Chat & AI Intelligence</div>
+  <div class="toc-item sub">Smart AI Routing (Local + Cloud)</div>
+  <div class="toc-item sub">Knowledge Base (RAG)</div>
+  <div class="toc-item sub">Self-Correction & Quality Grading</div>
+  <div class="toc-item sub">Streaming Responses</div>
+  <div class="toc-item sub">Conversation Threading & Sharing</div>
+  <div class="toc-item sub">Chat Templates</div>
+  <div class="toc-item sub">Feedback Learning Loop</div>
+  <div class="toc-item section">2. Smart Colleague Intelligence</div>
+  <div class="toc-item sub">Morning Briefing</div>
+  <div class="toc-item sub">Frustration Detection</div>
+  <div class="toc-item sub">Communication Style Adaptation</div>
+  <div class="toc-item sub">Peer Knowledge Linking</div>
+  <div class="toc-item sub">Proactive Nudges</div>
+  <div class="toc-item section">3. Personality System</div>
+  <div class="toc-item sub">30 Personality Modes</div>
+  <div class="toc-item sub">Level-Gated Unlocks</div>
+  <div class="toc-item section">4. Gamification & Progression</div>
+  <div class="toc-item sub">50-Level Character System</div>
+  <div class="toc-item sub">Achievements & Titles</div>
+  <div class="toc-item sub">Leaderboards</div>
+  <div class="toc-item sub">Avatar Customisation</div>
+  <div class="toc-item section">5. Voice & Avatar</div>
+  <div class="toc-item sub">Voice Chat (WebSocket)</div>
+  <div class="toc-item sub">3D Holographic Avatar</div>
+  <div class="toc-item section">6. Productivity Tools</div>
+  <div class="toc-item sub">Reminder System</div>
+  <div class="toc-item sub">Document Management</div>
+  <div class="toc-item sub">Memory System</div>
+  <div class="toc-item sub">Chat Search & Export</div>
+  <div class="toc-item section">7. Admin Features (God Mode)</div>
+  <div class="toc-item sub">User Management</div>
+  <div class="toc-item sub">Achievement Management</div>
+  <div class="toc-item sub">Usage Analytics Dashboard</div>
+  <div class="toc-item sub">System Tools</div>
+  <div class="toc-item sub">Roadmap Management</div>
+  <div class="toc-item section">8. FITSai CLI</div>
+  <div class="toc-item section">9. Technical Architecture</div>
+  <div class="toc-item section">10. Security</div>
+  <div class="toc-item section">11. Quick Start Guide</div>
+</div>
+
+<!-- SECTION 1: CHAT & AI -->
+<div class="section-header">
+  <h2>1. Chat & AI Intelligence</h2>
+  <p>The core of FITSai - an intelligent assistant that learns and adapts</p>
+</div>
+
+<div class="feature-card">
+  <h4>Smart AI Routing <span class="badge user">User</span></h4>
+  <p>FITSai uses a smart routing system that automatically selects the best AI model for each question, optimising for speed, cost, and quality.</p>
+
+  <table>
+    <tr><th>Query Type</th><th>Model</th><th>Where</th><th>Speed</th></tr>
+    <tr><td><strong>Simple questions</strong></td><td>llama3.1:8b via Ollama</td><td>Local GPU</td><td>1-3s</td></tr>
+    <tr><td><strong>Coding questions</strong></td><td>deepseek-coder-v2 via Ollama</td><td>Local GPU</td><td>2-5s</td></tr>
+    <tr><td><strong>Knowledge base answers</strong></td><td>llama3.1:8b (local first, GPT-4o-mini fallback)</td><td>Local / Cloud</td><td>1-4s</td></tr>
+    <tr><td><strong>Complex reasoning</strong></td><td>GPT-4o-mini (OpenAI)</td><td>Cloud</td><td>1-3s</td></tr>
+    <tr><td><strong>Image analysis</strong></td><td>GPT-4o-mini (OpenAI)</td><td>Cloud</td><td>2-4s</td></tr>
+  </table>
+
+  <p><strong>How it works:</strong> When you ask a question, FITSai analyses the complexity (word count, keywords, context) and routes it to the most appropriate model. Simple questions run on the local GPU for free, while complex reasoning and image analysis use cloud AI. If the local model is unavailable, everything gracefully falls back to OpenAI.</p>
+</div>
+
+<div class="feature-card">
+  <h4>Knowledge Base (RAG) <span class="badge user">User</span></h4>
+  <p>FITSai searches your company's uploaded documents before answering, so responses are grounded in real company knowledge.</p>
+  <ul>
+    <li>Upload PDF, DOCX, TXT, or image files (up to 50MB)</li>
+    <li>Documents are automatically chunked and indexed for semantic search</li>
+    <li>Answers include confidence scores and source references</li>
+    <li>Previously approved answers are cached to save costs</li>
+  </ul>
+  <div class="highlight">
+    <strong>Cost Savings:</strong> When you give a thumbs-up to an answer, it's saved in the learned answer database. Similar future questions reuse this answer at zero API cost. Local model routing further reduces costs by handling simple queries on-device.
+  </div>
+</div>
+
+<div class="feature-card">
+  <h4>Self-Correction & Quality Grading <span class="badge user">User</span></h4>
+  <p>Every response from a local AI model is automatically quality-checked in the background by GPT-4o-mini:</p>
+  <ul>
+    <li>Local model answers are graded for accuracy and completeness</li>
+    <li>Poor-quality answers are corrected and saved to the knowledge base</li>
+    <li>Future similar questions retrieve the corrected answer via RAG</li>
+    <li>Thumbs-down feedback triggers immediate re-grading (bypasses sampling)</li>
+  </ul>
+  <p>This means local model answers are never unchecked — they go through the same quality pipeline as cloud answers, just asynchronously.</p>
+</div>
+
+<div class="feature-card">
+  <h4>Streaming Responses <span class="badge user">User</span></h4>
+  <p>Responses appear in real-time as they're generated, token by token - no waiting for the full answer. Uses Server-Sent Events (SSE) for smooth, live text delivery. Full conversation thread context is maintained so FITSai understands your entire discussion.</p>
+</div>
+
+<div class="feature-card">
+  <h4>Conversation Threading & Sharing <span class="badge user">User</span></h4>
+  <p>Organise your conversations into separate threads by topic. FITSai remembers context within each thread, so you can switch between projects without losing your place.</p>
+  <ul>
+    <li>Create new threads or continue existing ones</li>
+    <li>Search across all your conversation history</li>
+    <li>Soft-delete conversations (recoverable, no data loss)</li>
+    <li>Export chats as PDF, JSON, or TXT</li>
+    <li><strong>Share conversations</strong> — copy a formatted thread to clipboard for sharing with colleagues</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h4>Chat Templates <span class="badge user">User</span></h4>
+  <p>Pre-defined prompts for common tasks, accessible via <strong>Ctrl+T</strong>. Templates help you get consistent, well-structured responses for recurring workflows like daily standups, code reviews, or ticket summaries.</p>
+</div>
+
+<div class="feature-card">
+  <h4>Feedback Learning Loop <span class="badge user">User</span></h4>
+  <p>Every response includes thumbs-up/thumbs-down buttons. Your feedback directly improves FITSai:</p>
+  <ul>
+    <li><strong>Thumbs Up:</strong> Answer is saved for future reuse (+10 XP for you)</li>
+    <li><strong>Thumbs Down:</strong> Answer is flagged for improvement</li>
+    <li>High-confidence matches (85%+) reuse approved answers instantly</li>
+  </ul>
+</div>
+
+<!-- SECTION 2: SMART COLLEAGUE -->
+<div class="section-header">
+  <h2>2. Smart Colleague Intelligence</h2>
+  <p>FITSai learns how you work, detects frustration, and connects you with team knowledge</p>
+</div>
+
+<div class="feature-card">
+  <h4>Morning Briefing <span class="badge user">User</span></h4>
+  <p>Start your day with a personalised briefing card that appears when you first open FITSai:</p>
+  <ul>
+    <li>Personalised greeting based on time of day and your streak</li>
+    <li>Pending reminders due today</li>
+    <li>Recent achievements and XP progress</li>
+    <li>Follow-up on unresolved issues from the past 7 days</li>
+    <li>Daily tip tailored to your usage patterns</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h4>Frustration Detection <span class="badge user">User</span></h4>
+  <p>FITSai detects when you're getting frustrated and automatically adjusts its tone:</p>
+  <ul>
+    <li>Analyses keywords, CAPS LOCK, punctuation patterns, and repeated thumbs-down feedback</li>
+    <li>Three frustration levels: mild, moderate, high</li>
+    <li>Empathy is injected into AI context, adapted to your active personality mode</li>
+    <li>High frustration triggers a gentler, more supportive tone without being patronising</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h4>Communication Style Adaptation <span class="badge user">User</span></h4>
+  <p>FITSai learns your communication preferences from your feedback patterns:</p>
+  <ul>
+    <li><strong>Brevity:</strong> Learns whether you prefer short or detailed answers</li>
+    <li><strong>Formality:</strong> Adapts between casual and formal tone</li>
+    <li><strong>Technical depth:</strong> Adjusts jargon level based on your expertise</li>
+  </ul>
+  <p>Preferences are learned automatically from thumbs-up/down feedback — no configuration needed.</p>
+</div>
+
+<div class="feature-card">
+  <h4>Peer Knowledge Linking <span class="badge user">User</span></h4>
+  <p>When you ask a question, FITSai checks if a colleague in your department has solved a similar problem before. If so, it mentions who solved it and what the solution was, connecting team knowledge across conversations.</p>
+</div>
+
+<div class="feature-card">
+  <h4>Proactive Nudges <span class="badge user">User</span></h4>
+  <p>FITSai detects when you've asked about the same topic 3+ times and proactively suggests creating a cheat sheet or document from your repeated questions — turning tribal knowledge into permanent documentation.</p>
+</div>
+
+<!-- SECTION 3: PERSONALITIES -->
+<div class="section-header">
+  <h2>3. Personality System</h2>
+  <p>30 unique AI voices that transform how FITSai communicates with you</p>
+</div>
+
+<p>FITSai has <strong>30 personality modes</strong> that change its communication style while maintaining technical accuracy. New personalities unlock as you level up, giving you more options to find the voice that works best for you.</p>
+
+<div class="highlight">
+  <strong>How to switch:</strong> Say "Switch to [mode name] mode" in chat, or select from your profile settings. Example: "Switch to sarcastic sidekick mode"
+</div>
+
+<table>
+  <tr><th>Personality</th><th>Style</th><th>Unlock Level</th></tr>
+  <tr><td>Professional Maven</td><td>Polished, efficient, corporate-friendly</td><td>Level 1</td></tr>
+  <tr><td>Sarcastic Sidekick</td><td>Witty, dry humor, playfully cynical</td><td>Level 3</td></tr>
+  <tr><td>Enthusiastic Cheerleader</td><td>High energy, motivational</td><td>Level 5</td></tr>
+  <tr><td>Zen Minimalist</td><td>Calm, concise, mindful</td><td>Level 7</td></tr>
+  <tr><td>Nerdy Explainer</td><td>Loves details, references, tangents</td><td>Level 9</td></tr>
+  <tr><td>Southern Charm</td><td>Warm, hospitable, colloquialisms</td><td>Level 11</td></tr>
+  <tr><td>Brutally Honest</td><td>Direct, no-nonsense</td><td>Level 13</td></tr>
+  <tr><td>Quirky Creative</td><td>Imaginative, metaphors</td><td>Level 15</td></tr>
+  <tr><td>Empathetic Counselor</td><td>Understanding, validating</td><td>Level 17</td></tr>
+  <tr><td>Mysterious Sage</td><td>Cryptic wisdom, riddles</td><td>Level 19</td></tr>
+  <tr><td>Chaotic Gremlin</td><td>Playful chaos, unpredictable</td><td>Level 21</td></tr>
+  <tr><td>Academic Scholar</td><td>Formal, well-researched</td><td>Level 23</td></tr>
+  <tr><td>Cool Aunt</td><td>Relaxed, supportive</td><td>Level 25</td></tr>
+  <tr><td>Drill Sergeant</td><td>Tough love, accountability</td><td>Level 27</td></tr>
+  <tr><td>Hopeless Romantic</td><td>Poetic, dreamy</td><td>Level 29</td></tr>
+  <tr><td>Tech Bro</td><td>Startup culture, business jargon</td><td>Level 31</td></tr>
+  <tr><td>Grandmother Wisdom</td><td>Comforting, traditional advice</td><td>Level 33</td></tr>
+  <tr><td>Conspiracy Theorist</td><td>Questions everything (still helpful)</td><td>Level 35</td></tr>
+  <tr><td>Game Show Host</td><td>Upbeat, engaging</td><td>Level 37</td></tr>
+  <tr><td>Noir Detective</td><td>Dramatic, 1940s private eye</td><td>Level 39</td></tr>
+  <tr><td>Bubbly Optimist</td><td>Silver linings, positivity</td><td>Level 41</td></tr>
+  <tr><td>Stoic Philosopher</td><td>Balanced, rational</td><td>Level 43</td></tr>
+  <tr><td>Mad Scientist</td><td>Experimentally-minded, unhinged</td><td>Level 44</td></tr>
+  <tr><td>Diplomatic Mediator</td><td>Balanced, conflict-averse</td><td>Level 45</td></tr>
+  <tr><td>Sassy Best Friend</td><td>Keeps it real, teases lovingly</td><td>Level 46</td></tr>
+  <tr><td>Vintage Librarian</td><td>Knowledgeable, organized</td><td>Level 47</td></tr>
+  <tr><td>Adventurous Explorer</td><td>Bold, curious</td><td>Level 48</td></tr>
+  <tr><td>Punk Rebel</td><td>Anti-establishment, edgy</td><td>Level 49</td></tr>
+  <tr><td>Mindful Yogi</td><td>Present-focused, holistic</td><td>Level 50</td></tr>
+  <tr><td>Existential Overthinker</td><td>Deep questions, philosophical</td><td>Level 50</td></tr>
+</table>
+
+<!-- SECTION 4: GAMIFICATION -->
+<div class="section-header">
+  <h2>4. Gamification & Progression</h2>
+  <p>Level up, earn achievements, and compete on the leaderboard</p>
+</div>
+
+<h3>50-Level Character Progression</h3>
+<p>Every interaction with FITSai earns you XP. As you level up, you unlock new personality modes, avatar colours, and earn prestigious titles.</p>
+
+<h4>XP Rewards</h4>
+<table>
+  <tr><th>Action</th><th>XP Earned</th></tr>
+  <tr><td>Ask a question</td><td>+5 XP</td></tr>
+  <tr><td>Give feedback (thumbs up/down)</td><td>+10 XP</td></tr>
+  <tr><td>Upload a document</td><td>+25 XP</td></tr>
+  <tr><td>Project contribution</td><td>+15 XP</td></tr>
+  <tr><td>Unlock an achievement</td><td>+50 to +200 XP (auto-awarded)</td></tr>
+</table>
+
+<h4>Character Classes</h4>
+<div class="level-grid">
+  <div class="level-item"><span class="emoji">&#129422;</span> <strong>Levels 1-5:</strong> Kobold (Beginner)</div>
+  <div class="level-item"><span class="emoji">&#128122;</span> <strong>Levels 6-10:</strong> Goblin</div>
+  <div class="level-item"><span class="emoji">&#129724;</span> <strong>Levels 11-15:</strong> Troll</div>
+  <div class="level-item"><span class="emoji">&#9935;</span> <strong>Levels 16-20:</strong> Dwarf</div>
+  <div class="level-item"><span class="emoji">&#129497;</span> <strong>Levels 21-25:</strong> Elf</div>
+  <div class="level-item"><span class="emoji">&#129497;</span> <strong>Levels 26-30:</strong> Wizard</div>
+  <div class="level-item"><span class="emoji">&#129413;</span> <strong>Levels 31-35:</strong> Phoenix</div>
+  <div class="level-item"><span class="emoji">&#129412;</span> <strong>Levels 36-40:</strong> Unicorn</div>
+  <div class="level-item"><span class="emoji">&#128009;</span> <strong>Levels 41-45:</strong> Dragon</div>
+  <div class="level-item"><span class="emoji">&#9889;</span> <strong>Levels 46-50:</strong> Demigod / God</div>
+</div>
+
+<h3>Achievements & Titles</h3>
+<p>Unlock achievements by reaching milestones. Each achievement grants bonus XP and some unlock equippable titles that display on the leaderboard.</p>
+
+<table>
+  <tr><th>Rarity</th><th>Examples</th><th>XP Reward</th></tr>
+  <tr><td><strong>Common</strong> (8)</td><td>Hello World, First Steps, Curious Mind, Dedicated</td><td>50 XP</td></tr>
+  <tr><td><strong>Rare</strong> (11)</td><td>Early Adopter, Knowledge Builder, Committed</td><td>100 XP</td></tr>
+  <tr><td><strong>Epic</strong> (8)</td><td>Bug Hunter, Department Champion, Elite Status</td><td>150 XP</td></tr>
+  <tr><td><strong>Legendary</strong> (2)</td><td>Legendary (Level 40), The Answer</td><td>200 XP</td></tr>
+  <tr><td><strong>Mythic</strong> (2)</td><td>Company MVP, Godhood (Level 50)</td><td>200 XP</td></tr>
+</table>
+
+<h3>Leaderboards</h3>
+<p>See how you rank against colleagues across multiple views:</p>
+<ul>
+  <li><strong>All-Time:</strong> Ranked by level and total XP</li>
+  <li><strong>Weekly:</strong> XP earned in the last 7 days</li>
+  <li><strong>Monthly:</strong> XP earned in the last 30 days</li>
+  <li><strong>Department:</strong> Filtered by your department</li>
+  <li><strong>Most Improved:</strong> Biggest XP gain this week</li>
+  <li><strong>Department Champions:</strong> Top user per department</li>
+</ul>
+<p>Leaderboard entries show your avatar, level, character class, equipped title, and department badge.</p>
+
+<h3>Avatar Customisation</h3>
+<p>Personalise your avatar with colour schemes that unlock as you level up:</p>
+<table>
+  <tr><th>Level</th><th>Colour</th><th>Level</th><th>Colour</th></tr>
+  <tr><td>1</td><td>Default (class colour)</td><td>30</td><td>Arctic White</td></tr>
+  <tr><td>5</td><td>Ocean Blue</td><td>35</td><td>Shadow Black</td></tr>
+  <tr><td>10</td><td>Forest Green</td><td>40</td><td>Golden Glory</td></tr>
+  <tr><td>15</td><td>Sunset Orange</td><td>45</td><td>Rainbow Prism</td></tr>
+  <tr><td>20</td><td>Royal Purple</td><td>50</td><td>Cosmic Void</td></tr>
+  <tr><td>25</td><td>Crimson Red</td><td></td><td></td></tr>
+</table>
+
+<div class="highlight">
+  <strong>Visual Effects by Level:</strong> Level 10+ gets a pulsing glow, Level 20+ gets an animated border, Level 30+ gets particle trails, and Level 50 gets cosmic multi-layer effects.
+</div>
+
+<!-- SECTION 5: VOICE & AVATAR -->
+<div class="section-header">
+  <h2>5. Voice & Avatar</h2>
+  <p>Speak to FITSai and watch the holographic avatar respond</p>
+</div>
+
+<div class="feature-card">
+  <h4>Voice Chat <span class="badge user">User</span></h4>
+  <p>Click the avatar or voice button to start a real-time voice conversation with FITSai.</p>
+  <ul>
+    <li>Speech-to-text via OpenAI Whisper (multi-language support)</li>
+    <li>Text-to-speech with 6 voice options: Alloy, Echo, Fable, Onyx, Nova, Shimmer</li>
+    <li>Full conversation context maintained during voice sessions</li>
+    <li>Works on both desktop and mobile browsers</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h4>3D Holographic Avatar <span class="badge user">User</span></h4>
+  <p>FITSai appears as an interactive 3D holographic face powered by Three.js with real-time visual feedback:</p>
+  <table>
+    <tr><th>Avatar State</th><th>Visual Effect</th></tr>
+    <tr><td><strong>Idle</strong></td><td>Gentle breathing animation, particles drift slowly</td></tr>
+    <tr><td><strong>Listening</strong></td><td>Particles flow inward, glow increases, face attentive</td></tr>
+    <tr><td><strong>Speaking</strong></td><td>Particles burst outward, maximum glow, energetic</td></tr>
+    <tr><td><strong>Processing</strong></td><td>Particles swirl rapidly, contemplative state</td></tr>
+    <tr><td><strong>Error</strong></td><td>Red tint, chaotic particle movement</td></tr>
+  </table>
+  <p>The avatar follows your mouse cursor, rotating up to 12 degrees to "look at" you. Shader effects include fresnel glow, scan lines, and personality-based colour tinting.</p>
+</div>
+
+<!-- SECTION 6: PRODUCTIVITY -->
+<div class="section-header">
+  <h2>6. Productivity Tools</h2>
+  <p>Reminders, documents, memory, and search to keep you productive</p>
+</div>
+
+<div class="feature-card">
+  <h4>Reminder System <span class="badge user">User</span></h4>
+  <p>Set reminders using natural language and receive popup notifications when they're due.</p>
+  <ul>
+    <li><strong>Create:</strong> "Remind me to call the client at 3pm" - FITSai parses the time and title</li>
+    <li><strong>Popup:</strong> Orange notification appears in top-right corner when due</li>
+    <li><strong>Actions:</strong> Mark as Done, Snooze 15 minutes, or Snooze 1 hour</li>
+    <li><strong>Overdue:</strong> All overdue reminders keep showing until you dismiss them</li>
+    <li><strong>Recurrence:</strong> Set daily, weekly, or monthly recurring reminders</li>
+  </ul>
+  <p>Reminders are checked every 30 seconds in the background, so you'll never miss one while using FITSai.</p>
+</div>
+
+<div class="feature-card">
+  <h4>Document Management <span class="badge user">User</span></h4>
+  <p>Upload and manage company documents to build the AI knowledge base.</p>
+  <ul>
+    <li><strong>Supported formats:</strong> PDF, DOCX, TXT, PNG, JPG (up to 50MB)</li>
+    <li>Documents are automatically chunked, embedded, and indexed</li>
+    <li>FITSai searches your documents when answering questions</li>
+    <li><strong>Document Analysis:</strong> Summarise, analyse, extract key info, or memorise documents</li>
+    <li><strong>Document Conversion:</strong> Convert DOCX/XLSX to PDF</li>
+    <li>Earn 25 XP for each document uploaded</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h4>Memory System <span class="badge user">User</span></h4>
+  <p>FITSai remembers important information about you across sessions.</p>
+  <ul>
+    <li>Automatically extracts key facts from conversations (40+ recognition patterns)</li>
+    <li>Memories have importance scores that decay over 30 days</li>
+    <li>Semantic search finds relevant memories even with different wording</li>
+    <li>View, search, and manage your memories from the Memory Manager page</li>
+    <li>All AI responses are informed by your stored memories for personalised answers</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h4>Chat Search & Export <span class="badge user">User</span></h4>
+  <p>Search across your entire conversation history with keyword matching and highlighting. Export any conversation as PDF, JSON, or TXT for record-keeping or sharing.</p>
+</div>
+
+<!-- SECTION 7: ADMIN -->
+<div class="section-header">
+  <h2>7. Admin Features (God Mode)</h2>
+  <p>System administration dashboard for admins and Level 46+ users</p>
+</div>
+
+<div class="highlight warning">
+  <strong>Access Required:</strong> God Mode is available to users with the <strong>admin</strong> role or users who have reached <strong>Level 46+</strong> (Demigod class).
+</div>
+
+<div class="feature-card admin">
+  <h4>User Management <span class="badge admin-badge">Admin</span></h4>
+  <p>Full control over user accounts from the God Mode dashboard:</p>
+  <ul>
+    <li>Search and view all users with their levels, XP, and departments</li>
+    <li>Edit user details (name, email, department, role)</li>
+    <li>Create new user accounts</li>
+    <li>Award XP to users with reason tracking</li>
+    <li>Modify character stats (STR/DEX/CON/INT/WIS/CHA)</li>
+  </ul>
+</div>
+
+<div class="feature-card admin">
+  <h4>System Tools <span class="badge admin-badge">Admin</span></h4>
+  <p>Direct system access for troubleshooting and maintenance:</p>
+  <ul>
+    <li>Execute bash commands on the server</li>
+    <li>Create and edit files</li>
+    <li>Monitor and restart backend services</li>
+    <li>Send test notifications</li>
+    <li>View system-wide statistics and trends</li>
+  </ul>
+</div>
+
+<div class="feature-card admin">
+  <h4>Roadmap Management <span class="badge admin-badge">Admin</span></h4>
+  <p>Interactive development roadmap visible in God Mode. Admins can update feature statuses (Pending / In Progress / Complete) directly from the UI. Changes are reflected for all users viewing the roadmap.</p>
+</div>
+
+<div class="feature-card admin">
+  <h4>Achievement Management <span class="badge admin-badge">Admin</span></h4>
+  <p>Search for any user and manually award or revoke achievements. Useful for recognising special contributions or correcting missed auto-awards. XP and level/class are automatically updated when achievements are awarded.</p>
+</div>
+
+<div class="feature-card admin">
+  <h4>Usage Analytics Dashboard <span class="badge admin-badge">Admin</span></h4>
+  <p>Comprehensive analytics on the Budget page:</p>
+  <ul>
+    <li><strong>Model breakdown:</strong> Queries per model (local vs cloud), cost per model</li>
+    <li><strong>Source breakdown:</strong> RAG, local AI, OpenAI, cached answers</li>
+    <li><strong>Top users:</strong> Most active users by conversation count</li>
+    <li><strong>Feedback stats:</strong> Thumbs up/down ratios, learned answer savings</li>
+    <li><strong>Department activity:</strong> Usage breakdown by department</li>
+  </ul>
+</div>
+
+<div class="feature-card admin">
+  <h4>Code Health Monitoring <span class="badge admin-badge">Admin</span></h4>
+  <p>Autonomous code scanning that monitors repository health. View scan results and notifications from the God Mode panel.</p>
+</div>
+
+<!-- SECTION 8: CLI -->
+<div class="section-header">
+  <h2>8. FITSai CLI</h2>
+  <p>Command-line interface for developers and power users</p>
+</div>
+
+<p>FITSai CLI is an interactive command-line tool (similar to Claude Code) that brings FITSai's AI capabilities to your terminal.</p>
+
+<div class="feature-card">
+  <h4>CLI Commands</h4>
+  <table>
+    <tr><th>Command</th><th>Description</th></tr>
+    <tr><td><code>fitsai</code></td><td>Start interactive REPL session</td></tr>
+    <tr><td><code>fitsai login</code></td><td>Authenticate with your FITSai account</td></tr>
+    <tr><td><code>fitsai logout</code></td><td>Clear stored credentials</td></tr>
+    <tr><td><code>fitsai chat "question"</code></td><td>Quick one-off query</td></tr>
+    <tr><td><code>fitsai config --show</code></td><td>View current settings</td></tr>
+    <tr><td><code>fitsai sessions --list</code></td><td>List saved sessions</td></tr>
+    <tr><td><code>fitsai sessions --resume ID</code></td><td>Resume a previous session</td></tr>
+  </table>
+</div>
+
+<div class="feature-card">
+  <h4>CLI Tools (6 Built-in)</h4>
+  <p>When FITSai needs to interact with your local system, it can use these tools with your confirmation:</p>
+  <table>
+    <tr><th>Tool</th><th>Description</th></tr>
+    <tr><td><code>read_file</code></td><td>Read file contents from your project</td></tr>
+    <tr><td><code>edit_file</code></td><td>Make targeted edits to files</td></tr>
+    <tr><td><code>write_file</code></td><td>Create new files</td></tr>
+    <tr><td><code>bash</code></td><td>Execute shell commands</td></tr>
+    <tr><td><code>glob</code></td><td>Find files by pattern matching</td></tr>
+    <tr><td><code>grep</code></td><td>Search file contents with regex</td></tr>
+  </table>
+  <p>All tool executions require user confirmation before running.</p>
+</div>
+
+<!-- SECTION 9: ARCHITECTURE -->
+<div class="section-header">
+  <h2>9. Technical Architecture</h2>
+  <p>The technology stack powering FITSai</p>
+</div>
+
+<div class="two-col">
+  <div>
+    <h4>Frontend</h4>
+    <ul>
+      <li>React 19 + TypeScript</li>
+      <li>Vite (build tool)</li>
+      <li>TailwindCSS (styling)</li>
+      <li>Three.js (3D avatar)</li>
+      <li>TanStack Query (state)</li>
+      <li>React Router (navigation)</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Backend</h4>
+    <ul>
+      <li>FastAPI (Python)</li>
+      <li>SQLAlchemy (async ORM)</li>
+      <li>PostgreSQL 16 (database)</li>
+      <li>ChromaDB (vector DB)</li>
+      <li>Alembic (migrations)</li>
+      <li>Ollama (local AI serving)</li>
+      <li>OpenAI API (cloud AI)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="two-col">
+  <div>
+    <h4>AI Models</h4>
+    <ul>
+      <li>llama3.1:8b via Ollama (local chat)</li>
+      <li>deepseek-coder-v2 via Ollama (local code)</li>
+      <li>GPT-4o-mini (cloud reasoning)</li>
+      <li>OpenAI Whisper (voice input)</li>
+      <li>OpenAI TTS (voice output)</li>
+      <li>Sentence Transformers (embeddings)</li>
+    </ul>
+  </div>
+  <div>
+    <h4>Infrastructure</h4>
+    <ul>
+      <li>Ubuntu 24.04 LTS</li>
+      <li>Ollama (local AI serving)</li>
+      <li>Nginx (reverse proxy)</li>
+      <li>Docker (databases)</li>
+      <li>systemd (services)</li>
+      <li>NVIDIA CUDA (GPU)</li>
+    </ul>
+  </div>
+</div>
+
+<h4>Server Specifications</h4>
+<table>
+  <tr><th>Component</th><th>Specification</th></tr>
+  <tr><td>CPU</td><td>AMD Ryzen 7 5700 (16 cores)</td></tr>
+  <tr><td>RAM</td><td>32 GB DDR4</td></tr>
+  <tr><td>GPU</td><td>NVIDIA RTX 4060 (8 GB VRAM)</td></tr>
+  <tr><td>OS</td><td>Ubuntu 24.04 LTS</td></tr>
+</table>
+
+<h4>Services</h4>
+<table>
+  <tr><th>Service</th><th>Port</th><th>Managed By</th></tr>
+  <tr><td>Backend API</td><td>8000</td><td>systemd: felicia-backend</td></tr>
+  <tr><td>Ollama (AI Models)</td><td>11434</td><td>systemd: ollama</td></tr>
+  <tr><td>PostgreSQL Database</td><td>5432</td><td>Docker: felicia-postgres</td></tr>
+  <tr><td>Nginx (Web Server)</td><td>80 / 443</td><td>systemd: nginx</td></tr>
+</table>
+
+<!-- SECTION 10: SECURITY -->
+<div class="section-header">
+  <h2>10. Security</h2>
+  <p>Enterprise-grade authentication and data protection</p>
+</div>
+
+<div class="feature-card">
+  <h4>Authentication</h4>
+  <ul>
+    <li><strong>JWT Tokens:</strong> HS256 algorithm, 7-day expiration</li>
+    <li><strong>Password Hashing:</strong> Bcrypt with salt rounds</li>
+    <li><strong>Role-Based Access:</strong> User, Manager, Admin roles</li>
+    <li><strong>Level-Based Elevation:</strong> Level 46+ gains God Mode access</li>
+    <li><strong>Password Reset:</strong> Email token-based forgot password flow</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h4>Data Protection</h4>
+  <ul>
+    <li>SQL injection prevention via ORM parameterised queries</li>
+    <li>Pydantic schema validation on all API inputs</li>
+    <li>CORS configuration for allowed origins</li>
+    <li>WebSocket token validation for voice sessions</li>
+    <li>Document storage outside web root</li>
+    <li>Soft-delete for conversations (no permanent data loss)</li>
+    <li>Voice data not permanently stored on server</li>
+  </ul>
+</div>
+
+<!-- SECTION 11: QUICK START -->
+<div class="section-header">
+  <h2>11. Quick Start Guide</h2>
+  <p>Get started with FITSai in minutes</p>
+</div>
+
+<h3>For Users</h3>
+<div class="highlight">
+  <ol>
+    <li><strong>Login</strong> - Use your company email and password</li>
+    <li><strong>Ask a question</strong> - Type in the chat box and hit Enter (+5 XP)</li>
+    <li><strong>Give feedback</strong> - Click thumbs up or down on answers (+10 XP)</li>
+    <li><strong>Upload documents</strong> - Add company docs to improve answers (+25 XP)</li>
+    <li><strong>Check your progress</strong> - View level, XP, and achievements on your profile</li>
+    <li><strong>Set reminders</strong> - Ask FITSai "Remind me to..." for natural language reminders</li>
+    <li><strong>Try voice</strong> - Click the avatar to start a voice conversation</li>
+    <li><strong>Switch personalities</strong> - Say "Switch to [mode] mode" for a different vibe</li>
+    <li><strong>Compete</strong> - Check the leaderboard to see your ranking</li>
+  </ol>
+</div>
+
+<h3>For Admins</h3>
+<div class="highlight warning">
+  <ol>
+    <li><strong>Access God Mode</strong> - Click the God Mode icon in the navigation (admin role required)</li>
+    <li><strong>Manage users</strong> - Search, edit, and create user accounts</li>
+    <li><strong>Award XP</strong> - Recognise users with XP bonuses</li>
+    <li><strong>Monitor system</strong> - Check system stats, service health, and API costs</li>
+    <li><strong>Update roadmap</strong> - Change feature statuses from the roadmap panel</li>
+    <li><strong>View analytics</strong> - Check model usage, costs, and feedback stats on the Budget page</li>
+  </ol>
+</div>
+
+<h3>Tips for Best Results</h3>
+<ul>
+  <li><strong>Be specific:</strong> More details = better answers</li>
+  <li><strong>Give feedback:</strong> Thumbs up/down improves FITSai and earns you XP</li>
+  <li><strong>Upload documents:</strong> The more company knowledge, the better the answers</li>
+  <li><strong>Try different personalities:</strong> Find the communication style that works for you</li>
+  <li><strong>Use templates:</strong> Press Ctrl+T for pre-built prompts</li>
+  <li><strong>Ask follow-ups:</strong> FITSai remembers your conversation context</li>
+</ul>
+
+<div style="margin-top: 40px; text-align: center; color: #888; font-size: 9pt; border-top: 1px solid #ddd; padding-top: 15px;">
+  <strong>FITSai</strong> - Friendly Intelligent Technical Support AI<br>
+  Internal Codename: FELICIA &bull; February 2026 &bull; Version 2.0<br>
+  &copy; FITS Company &bull; All Rights Reserved
+</div>
+
+</body>
+</html>
