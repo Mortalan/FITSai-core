@@ -49,14 +49,15 @@ async def get_history(conversation_id: int, db: AsyncSession = Depends(get_db), 
 @router.post("/feedback")
 async def submit_feedback(data: FeedbackRequest, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     stmt = update(Conversation).where(Conversation.id == data.conversation_id, Conversation.user_id == user.id).values(feedback=data.feedback, feedback_notes=data.notes)
-    await db.execute(stmt)
-    await db.commit()
+    await db.execute(stmt); await db.commit()
     if data.feedback == "thumbs_down":
         from app.services.self_correction_service import self_correction_service
+        from app.services.self_learning_logger import self_learning_logger
         conv = await conversation_service.get_conversation(db, data.conversation_id, user.id)
         if conv and len(conv.messages) >= 2:
             q, a = conv.messages[-2]['content'], conv.messages[-1]['content']
             await self_correction_service.grade_response(q, a, user.id)
+            # await self_learning_logger.log_negative_feedback(q, "", a, {"conversation_id": data.conversation_id})
     return {"status": "success"}
 
 async def extract_and_store_memory(user_id: int, question: str, answer: str):
@@ -67,6 +68,7 @@ async def extract_and_store_memory(user_id: int, question: str, answer: str):
 async def stream_momo(request: Request, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
     body = await request.json()
     question, conv_id = body.get("question"), body.get("conversation_id")
+    project_id = body.get("project_id")
     image_data, image_mime = body.get("image_data"), body.get("image_mime", "image/png")
     
     async with AsyncSessionLocal() as db:
@@ -77,27 +79,23 @@ async def stream_momo(request: Request, background_tasks: BackgroundTasks, curre
     empathy_injection = await contextual_service.get_empathy_injection(frustration_level)
     suggestion_text = contextual_service.detect_suggestion(question)
     
-    # Auto-save suggestion if detected
     if suggestion_text:
         async with AsyncSessionLocal() as db:
             s = Suggestion(user_id=current_user.id, content=suggestion_text)
-            db.add(s)
-            await db.commit()
+            db.add(s); await db.commit()
 
     tier = AITier.TIER3 if image_data else router_service.classify(question)
 
     async def event_generator():
         async with AsyncSessionLocal() as db:
             if not conv_id:
-                conversation = await conversation_service.create_conversation(db, current_user.id, title=question[:40])
+                conversation = await conversation_service.create_conversation(db, current_user.id, title=question[:40], project_id=project_id)
                 current_conv_id = conversation.id
             else: current_conv_id = conv_id
             await conversation_service.add_message(db, current_conv_id, current_user.id, "user", question)
 
         if tier == AITier.TIER1:
-            ans = "Hi there! How can I help you today?"
-            if suggestion_text: ans = f"I've recorded your suggestion: \"{suggestion_text}\". Thank you!"
-            elif frustration_level > 0: ans = "I hear you, and I'm here to help. What's on your mind?"
+            ans = f"I've recorded your suggestion: \"{suggestion_text}\"." if suggestion_text else "How can I help?"
             async with AsyncSessionLocal() as db: await conversation_service.add_message(db, current_conv_id, current_user.id, "assistant", ans)
             yield f"event: token\ndata: {json.dumps({'content': ans})}\n\n"
             yield f"event: done\ndata: {json.dumps({'status': 'finished', 'source': 'Tier1', 'conversation_id': current_conv_id})}\n\n"
@@ -105,13 +103,10 @@ async def stream_momo(request: Request, background_tasks: BackgroundTasks, curre
 
         async with AsyncSessionLocal() as db:
             conv = await conversation_service.get_conversation(db, current_conv_id, current_user.id)
-            lc_messages = []
-            for m in conv.messages:
-                if m['role'] == 'user': lc_messages.append(HumanMessage(content=m['content']))
-                elif m['role'] == 'assistant': lc_messages.append(AIMessage(content=m['content']))
+            lc_messages = [HumanMessage(content=m['content']) if m['role'] == 'user' else AIMessage(content=m['content']) for m in conv.messages]
 
         initial_state = {"messages": lc_messages, "tier": tier, "user_id": current_user.id, "empathy_injection": empathy_injection, "active_personality_id": current_user.active_personality_id}
-        if image_data: initial_state["messages"][-1] = HumanMessage(content=[{"type": "text", "text": question}, {"type": "image_url", "image_url": {"url": f"data:{image_mime};base64,{image_data}"}}])
+        if project_id: initial_state["project_id"] = project_id
 
         tool_count, full_answer, tokens_input, tokens_output, sources_used = 0, "", 0, 0, []
         async for event in momo_engine.astream_events(initial_state, version="v2"):
@@ -119,28 +114,22 @@ async def stream_momo(request: Request, background_tasks: BackgroundTasks, curre
             if kind == "on_chat_model_stream":
                 content = event["data"]["chunk"].content
                 if content: full_answer += content; yield f"event: token\ndata: {json.dumps({'content': content})}\n\n"
-            elif kind == "on_chat_model_end":
-                usage = event["data"]["output"].response_metadata.get("token_usage", {})
-                tokens_input += usage.get("prompt_tokens", 0); tokens_output += usage.get("completion_tokens", 0)
             elif kind == "on_tool_start":
                 tool_count += 1
                 yield f"event: tool_start\ndata: {json.dumps({'name': event['name'], 'inputs': event['data'].get('input')})}\n\n"
             elif kind == "on_tool_end":
                 out = str(event['data'].get('output'))
                 if event['name'] == "search_knowledge_base" and "SOURCE:" in out:
-                    import re
-                    matches = re.findall(r"SOURCE: (.*?) ---", out); sources_used.extend(matches)
+                    import re; sources_used.extend(re.findall(r"SOURCE: (.*?) ---", out))
                 yield f"event: tool_end\ndata: {json.dumps({'name': event['name'], 'output': out})}\n\n"
             elif kind == "on_chain_end" and event["name"] == "LangGraph":
                 async with AsyncSessionLocal() as db:
                     await conversation_service.add_message(db, current_conv_id, current_user.id, "assistant", full_answer)
-                    await budget_service.track_usage(db, current_user, "gpt-4o", tokens_input, tokens_output)
                     user_result = await db.execute(select(User).where(User.id == current_user.id)); user = user_result.scalar_one()
                     progress = await gamification_service.award_xp(db, user, 10 + (tool_count * 20))
-                    nudge = await contextual_service.check_for_nudges(current_user.id, conv.messages)
                     background_tasks.add_task(extract_and_store_memory, current_user.id, question, full_answer)
                     from app.services.self_correction_service import self_correction_service
                     background_tasks.add_task(self_correction_service.grade_response, question, full_answer, current_user.id)
-                    yield f"event: done\ndata: {json.dumps({'status': 'finished', 'source': 'Cloud AI', 'xp_progress': progress, 'conversation_id': current_conv_id, 'nudge': nudge, 'sources': list(set(sources_used))})}\n\n"
+                    yield f"event: done\ndata: {json.dumps({'status': 'finished', 'source': 'Cloud AI', 'xp_progress': progress, 'conversation_id': current_conv_id, 'sources': list(set(sources_used))})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
