@@ -7,17 +7,17 @@ import { DocumentLibrary } from './components/Documents';
 import { Achievements } from './components/Achievements';
 import { Leaderboard } from './components/Leaderboard';
 import { Settings } from './components/Settings';
+import { Reminders } from './components/Reminders';
 import { streamMomo, getConversation } from './api';
 import type { Message, ToolCall } from './types';
 
-export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'settings';
+export type AppView = 'chat' | 'docs' | 'achievements' | 'leaderboard' | 'settings' | 'reminders';
 
 function App() {
   const token = useAuthStore((state) => state.token);
   const updateUser = useAuthStore((state) => state.updateUser);
   const [view, setView] = useState<AppView>('chat');
   
-  // Centralized Chat State
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [momoState, setMomoState] = useState<'idle' | 'thinking' | 'speaking'>('idle');
@@ -166,6 +166,7 @@ function App() {
       {view === 'achievements' && <Achievements />}
       {view === 'leaderboard' && <Leaderboard />}
       {view === 'settings' && <Settings />}
+      {view === 'reminders' && <Reminders />}
     </Layout>
   );
 }

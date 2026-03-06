@@ -10,9 +10,17 @@ function useWebSocket(
   const [state, setState] = useState<ConnectionState>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
+  
+  // Use refs for callbacks to prevent reconnection when they change
+  const onMessageRef = useRef(onMessage);
+  const onBinaryRef = useRef(onBinary);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+    onBinaryRef.current = onBinary;
+  }, [onMessage, onBinary]);
 
   const connect = useCallback(() => {
-    // Don't connect if no token or already connected/connecting
     if (!token || wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
       return;
     }
@@ -25,8 +33,10 @@ function useWebSocket(
     setState('connecting');
     console.log('[WS] Connecting to Momo Voice...');
     
-    // Use window.location.hostname if we want to be dynamic, but 10.0.0.231 is hardcoded for now
-    const wsUrl = `ws://10.0.0.231:9000/api/v1/voice/ws`;
+    const host = window.location.hostname || '10.0.0.231';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${host}:9000/api/v1/voice/ws`;
+    
     const ws = new WebSocket(wsUrl);
     ws.binaryType = 'arraybuffer';
 
@@ -37,10 +47,10 @@ function useWebSocket(
 
     ws.onmessage = (e) => {
       if (e.data instanceof ArrayBuffer) {
-        onBinary(e.data);
+        onBinaryRef.current(e.data);
       } else {
         try {
-          onMessage(JSON.parse(e.data));
+          onMessageRef.current(JSON.parse(e.data));
         } catch (err) {
           console.error('[WS] Parse error:', err);
         }
@@ -50,8 +60,6 @@ function useWebSocket(
     ws.onclose = (e) => {
       console.log('[WS] Closed:', e.code, e.reason);
       setState('disconnected');
-      
-      // Only reconnect if not closed intentionally
       if (e.code !== 1000 && !reconnectTimerRef.current) {
         reconnectTimerRef.current = window.setTimeout(connect, 5000);
       }
@@ -63,13 +71,17 @@ function useWebSocket(
     };
 
     wsRef.current = ws;
-  }, [token, onMessage, onBinary]);
+  }, [token]); // Removed onMessage/onBinary from dependencies
 
   useEffect(() => {
     connect();
     return () => {
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      wsRef.current?.close(1000, 'Unmounting');
+      if (wsRef.current) {
+        console.log('[WS] Cleaning up connection');
+        wsRef.current.close(1000, 'Unmounting');
+        wsRef.current = null;
+      }
     };
   }, [connect]);
 

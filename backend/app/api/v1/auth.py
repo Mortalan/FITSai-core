@@ -4,11 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
 from jose import jwt, JWTError
+from typing import Optional
 
 from app.core.database import get_db
 from app.models.user import User
 from app.core.auth import verify_password, create_access_token, get_password_hash
 from app.core.config import settings
+from app.services.gamification_service import gamification_service
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
@@ -16,6 +18,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    active_personality_id: Optional[int] = None
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db), 
@@ -51,6 +57,10 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             detail="Invalid email or password",
         )
     
+    # Successful login -> Update streak
+    await gamification_service.update_streak(db, user)
+    await db.commit()
+    
     access_token = create_access_token(subject=user.id)
     return {
         "access_token": access_token,
@@ -59,9 +69,29 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             "id": user.id,
             "email": user.email,
             "name": user.name,
-            "character_class": user.character_class
+            "character_class": user.character_class,
+            "xp_total": user.xp_total,
+            "character_level": user.character_level,
+            "active_personality_id": user.active_personality_id
         }
     }
+
+@router.post("/update-profile")
+async def update_profile(
+    request: ProfileUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    if request.name is not None: user.name = request.name
+    if request.active_personality_id is not None: user.active_personality_id = request.active_personality_id
+    
+    await db.commit()
+    await db.refresh(user)
+    return {"message": "Profile updated successfully", "user": {
+        "id": user.id,
+        "name": user.name,
+        "active_personality_id": user.active_personality_id
+    }}
 
 @router.post("/setup-admin")
 async def create_admin(db: AsyncSession = Depends(get_db)):

@@ -4,7 +4,6 @@ const API_BASE_URL = 'http://10.0.0.231:9000/api/v1';
 
 export async function* streamMomo(question: string, conversationId?: number, imageData?: string) {
   const token = useAuthStore.getState().token;
-  
   const response = await fetch(`${API_BASE_URL}/chat/stream`, {
     method: 'POST',
     headers: { 
@@ -29,16 +28,13 @@ export async function* streamMomo(question: string, conversationId?: number, ima
 
   const reader = response.body?.getReader();
   const decoder = new TextDecoder();
-
   if (!reader) return;
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-
     const chunk = decoder.decode(value, { stream: true });
     const lines = chunk.split('\n\n');
-
     for (const line of lines) {
       if (!line.trim()) continue;
       const eventMatch = line.match(/^event: (.*)/m);
@@ -64,6 +60,27 @@ export async function getConversation(id: number) {
   const token = useAuthStore.getState().token;
   const response = await fetch(`${API_BASE_URL}/chat/history/${id}`, {
     headers: { 'Authorization': `Bearer ${token}` },
+  });
+  return response.json();
+}
+
+export async function listPersonalities() {
+  const token = useAuthStore.getState().token;
+  const response = await fetch(`${API_BASE_URL}/personality/list`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  return response.json();
+}
+
+export async function updateProfile(data: { name?: string, active_personality_id?: number }) {
+  const token = useAuthStore.getState().token;
+  const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data),
   });
   return response.json();
 }

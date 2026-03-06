@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { MessageSquare, Plus, Settings as SettingsIcon, LogOut, FileText, Trophy, Award } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { MessageSquare, Plus, Settings as SettingsIcon, LogOut, FileText, Trophy, Award, Bell, Search, X } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { ProgressDashboard } from './ProgressDashboard';
@@ -22,6 +22,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
   const logout = useAuthStore((state) => state.logout);
   const [dept, setDept] = useState<Department | null>(null);
   const [history, setHistory] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (token) {
@@ -31,7 +32,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
       
       refreshHistory();
     }
-  }, [token, currentView]); // Refresh history when switching to chat or docs
+  }, [token, currentView]);
 
   const refreshHistory = async () => {
     try {
@@ -39,6 +40,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
       setHistory(data);
     } catch (err) {}
   };
+
+  const filteredHistory = useMemo(() => {
+    if (!searchQuery) return history;
+    return history.filter(h => h.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [history, searchQuery]);
 
   return (
     <div className="flex h-screen bg-[var(--background)] text-[var(--foreground)] font-sans">
@@ -76,10 +82,25 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
             <span className="text-sm font-semibold">Active Chat</span>
           </div>
           
-          {history.length > 0 && (
-            <div className="py-2">
-              <p className="text-[10px] uppercase font-bold text-gray-400 px-3 mb-2 tracking-widest">Recent History</p>
-              {history.map(chat => (
+          <div className="py-2 px-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Recent History</p>
+              {searchQuery && <X size={12} className="text-gray-400 cursor-pointer" onClick={() => setSearchQuery('')} />}
+            </div>
+            
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+              <input 
+                type="text"
+                placeholder="Search chats..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-[var(--input-bg)]/50 border border-[var(--border)] rounded-lg py-1.5 pl-8 pr-3 text-[11px] outline-none focus:ring-1 focus:ring-[var(--accent)]/50 transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              {filteredHistory.slice(0, 10).map(chat => (
                 <div 
                   key={chat.id}
                   onClick={() => onChatSelect(chat.id)}
@@ -90,7 +111,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
                 </div>
               ))}
             </div>
-          )}
+          </div>
+
+          <div 
+            onClick={() => onViewChange('reminders')}
+            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'reminders' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
+          >
+            <Bell size={18} />
+            <span className="text-sm font-semibold">Reminders</span>
+          </div>
 
           <div 
             onClick={() => onViewChange('docs')}
@@ -137,7 +166,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
         <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
              <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-               {dept?.branding?.custom_greeting || 'FITSai-Core v1.8.1'} • {currentView}
+               {dept?.branding?.custom_greeting || 'FITSai-Core v1.9.5'} • {currentView}
              </span>
           </div>
           <div className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import useAudioRecorder from './useAudioRecorder';
 import useAudioPlayer from './useAudioPlayer';
 import useWebSocket from './useWebSocket';
@@ -8,25 +8,35 @@ export type VoiceState = 'idle' | 'listening' | 'processing' | 'speaking';
 function useVoice(token: string | null, onMessage: (text: string) => void) {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const audioChunksRef = useRef<Blob[]>([]);
+  const onMessageRef = useRef(onMessage);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   const onPlaybackComplete = useCallback(() => {
     setVoiceState('idle');
   }, []);
 
   const player = useAudioPlayer(onPlaybackComplete);
+  // Store player in a ref to stabilize callbacks
+  const playerRef = useRef(player);
+  useEffect(() => {
+    playerRef.current = player;
+  });
 
   const handleWebSocketMessage = useCallback((msg: any) => {
     if (msg.type === 'token') {
-      onMessage(msg.content);
+      onMessageRef.current(msg.content);
     } else if (msg.type === 'status') {
       if (msg.message.includes('thinking')) setVoiceState('processing');
       if (msg.message.includes('speaking')) setVoiceState('speaking');
     }
-  }, [onMessage]);
+  }, []);
 
   const handleBinaryData = useCallback((data: ArrayBuffer) => {
-    player.enqueueAudioChunk(data);
-  }, [player]);
+    playerRef.current.enqueueAudioChunk(data);
+  }, []);
 
   const ws = useWebSocket(token, handleWebSocketMessage, handleBinaryData);
 

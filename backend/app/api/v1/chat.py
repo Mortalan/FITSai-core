@@ -109,7 +109,8 @@ async def stream_momo(
             "messages": lc_messages, 
             "tier": tier,
             "user_id": current_user.id,
-            "empathy_injection": empathy_injection
+            "empathy_injection": empathy_injection,
+            "active_personality_id": current_user.active_personality_id
         }
         
         if image_data:
@@ -145,18 +146,13 @@ async def stream_momo(
                     progress = await gamification_service.award_xp(db, user, 10 + (tool_count * 20))
                     new_achievements = await achievement_service.check_achievements(db, user, "message", {})
                     
-                    # Proactive Nudge check
-                    nudge = await contextual_service.check_for_nudges(current_user.id, conv.messages)
-                    
-                    # Background Memory Extraction
                     background_tasks.add_task(extract_and_store_memory, current_user.id, question, full_assistant_answer)
                     
                     yield f"event: done\ndata: {json.dumps({
                         'status': 'finished',
                         'xp_progress': progress,
                         'new_achievements': new_achievements,
-                        'conversation_id': current_conv_id,
-                        'nudge': nudge
+                        'conversation_id': current_conv_id
                     })}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
