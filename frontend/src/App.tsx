@@ -1,14 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { Layout } from './components/Layout';
 import { Chat } from './components/Chat';
 import { Login } from './components/Login';
 import { Workspace } from './components/Workspace';
+import { AppShortcuts } from './components/AppShortcuts';
 import { streamMomo, getConversation } from './api';
 import useVoice from './hooks/useVoice';
-import type { Message, ToolCall } from './types';
-
-export type AppView = 'chat' | 'workspace';
+import type { Message, ToolCall, AppView } from './types';
+export type { AppView } from "./types";
 
 function App() {
   const token = useAuthStore((state) => state.token);
@@ -70,8 +70,16 @@ function App() {
           setMomoState('idle');
           setStatus(null);
           if (event.conversation_id) setCurrentConversationId(event.conversation_id);
+          
+          if (event.sources && event.sources.length > 0) {
+            setMessages(prev => {
+              const others = prev.filter(m => m.id !== assistantId);
+              return [...others, { id: assistantId, role: 'assistant', content: assistantContent, toolCalls: [...currentToolCalls], sources: event.sources }];
+            });
+          }
+
           if (event.xp_progress) {
-            updateUser({ xp_total: event.xp_progress.xp_total, character_level: event.xp_progress.level, character_class: event.xp_progress.class });
+            updateUser({ xp_total: event.xp_progress.xp_total, character_level: event.xp_progress.level, character_class: event.xp_progress.class, stats: event.xp_progress.stats });
             setXpUpdate({ amount: event.xp_progress.xp_awarded, level: event.xp_progress.level, leveledUp: event.xp_progress.leveled_up });
           }
           if (event.new_achievements && event.new_achievements.length > 0) setUnlockedAchievements(event.new_achievements);
@@ -102,7 +110,7 @@ function App() {
       const conv = await getConversation(id);
       setCurrentConversationId(id);
       const mappedMessages: Message[] = conv.messages.map((m: any, i: number) => ({
-        id: `msg_${i}`, role: m.role, content: m.content, toolCalls: m.tool_calls
+        id: `msg_${i}`, role: m.role, content: m.content, toolCalls: m.tool_calls, sources: m.sources
       }));
       setMessages(mappedMessages);
       setStatus(null);
@@ -112,12 +120,24 @@ function App() {
   };
 
   return (
-    <Layout onViewChange={setView} currentView={view} onNewChat={handleNewChat} onChatSelect={handleChatSelect}>
-      {view === 'chat' && (
-        <Chat messages={messages} onSendMessage={handleSendMessage} status={status} momoState={momoState} xpUpdate={xpUpdate} unlockedAchievements={unlockedAchievements} voice={voice} />
-      )}
-      {view === 'workspace' && <Workspace />}
-    </Layout>
+    <>
+      <AppShortcuts onViewChange={setView} onNewChat={handleNewChat} />
+      <Layout onViewChange={setView} currentView={view} onNewChat={handleNewChat} onChatSelect={handleChatSelect}>
+        {view === 'chat' && (
+          <Chat 
+            messages={messages} 
+            onSendMessage={handleSendMessage} 
+            status={status} 
+            momoState={momoState} 
+            xpUpdate={xpUpdate} 
+            unlockedAchievements={unlockedAchievements} 
+            voice={voice} 
+            conversationId={currentConversationId}
+          />
+        )}
+        {view === 'workspace' && <Workspace />}
+      </Layout>
+    </>
   );
 }
 

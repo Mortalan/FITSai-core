@@ -21,6 +21,9 @@ class LoginRequest(BaseModel):
 
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
+    email: Optional[str] = None
+    avatar_emoji: Optional[str] = None
+    avatar_color: Optional[str] = None
     active_personality_id: Optional[int] = None
 
 async def get_current_user(
@@ -57,7 +60,6 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             detail="Invalid email or password",
         )
     
-    # Successful login -> Update streak
     await gamification_service.update_streak(db, user)
     await db.commit()
     
@@ -69,10 +71,12 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             "id": user.id,
             "email": user.email,
             "name": user.name,
+            "is_superuser": user.is_superuser,
             "character_class": user.character_class,
             "xp_total": user.xp_total,
             "character_level": user.character_level,
-            "active_personality_id": user.active_personality_id
+            "active_personality_id": user.active_personality_id,
+            "special_effects": user.special_effects
         }
     }
 
@@ -83,14 +87,24 @@ async def update_profile(
     user: User = Depends(get_current_user)
 ):
     if request.name is not None: user.name = request.name
+    if request.email is not None: user.email = request.email
     if request.active_personality_id is not None: user.active_personality_id = request.active_personality_id
+    
+    # Handle Avatar Customization
+    if request.avatar_emoji or request.avatar_color:
+        effects = dict(user.special_effects) if user.special_effects else {}
+        if request.avatar_emoji: effects["emoji"] = request.avatar_emoji
+        if request.avatar_color: effects["color"] = request.avatar_color
+        user.special_effects = effects
     
     await db.commit()
     await db.refresh(user)
     return {"message": "Profile updated successfully", "user": {
         "id": user.id,
         "name": user.name,
-        "active_personality_id": user.active_personality_id
+        "email": user.email,
+        "active_personality_id": user.active_personality_id,
+        "special_effects": user.special_effects
     }}
 
 @router.post("/setup-admin")

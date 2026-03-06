@@ -6,30 +6,14 @@ export async function* streamMomo(question: string, conversationId?: number, ima
   const token = useAuthStore.getState().token;
   const response = await fetch(`${API_BASE_URL}/chat/stream`, {
     method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ 
-      question, 
-      conversation_id: conversationId,
-      image_data: imageData 
-    }),
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ question, conversation_id: conversationId, image_data: imageData }),
   });
-
-  if (response.status === 401) {
-    useAuthStore.getState().logout();
-    throw new Error('Session expired');
-  }
-
-  if (!response.ok) {
-    throw new Error('Failed to connect to Momo');
-  }
-
+  if (response.status === 401) { useAuthStore.getState().logout(); throw new Error('Session expired'); }
+  if (!response.ok) throw new Error('Failed to connect to Momo');
   const reader = response.body?.getReader();
   const decoder = new TextDecoder();
   if (!reader) return;
-
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -48,38 +32,39 @@ export async function* streamMomo(question: string, conversationId?: number, ima
   }
 }
 
+export async function submitFeedback(conversationId: number, feedback: 'thumbs_up' | 'thumbs_down', notes?: string) {
+  const token = useAuthStore.getState().token;
+  const response = await fetch(`${API_BASE_URL}/chat/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ conversation_id: conversationId, feedback, notes }),
+  });
+  return response.json();
+}
+
 export async function getChatHistory() {
   const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE_URL}/chat/history`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-  });
+  const response = await fetch(`${API_BASE_URL}/chat/history`, { headers: { 'Authorization': `Bearer ${token}` } });
   return response.json();
 }
 
 export async function getConversation(id: number) {
   const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE_URL}/chat/history/${id}`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-  });
+  const response = await fetch(`${API_BASE_URL}/chat/history/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
   return response.json();
 }
 
 export async function listPersonalities() {
   const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE_URL}/personality/list`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-  });
+  const response = await fetch(`${API_BASE_URL}/personality/list`, { headers: { 'Authorization': `Bearer ${token}` } });
   return response.json();
 }
 
-export async function updateProfile(data: { name?: string, active_personality_id?: number }) {
+export async function updateProfile(data: any) {
   const token = useAuthStore.getState().token;
   const response = await fetch(`${API_BASE_URL}/auth/update-profile`, {
     method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify(data),
   });
   return response.json();

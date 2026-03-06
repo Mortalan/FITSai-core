@@ -12,7 +12,11 @@ from app.models.department import Department
 from app.models.personality_mode import PersonalityMode
 from app.models.conversation import Conversation
 from app.models.budget import DepartmentBudget, ApiUsage
-from app.services.reminder_service import Reminder # Import all models here
+from app.services.reminder_service import Reminder
+from app.api.v1.suggestions import Suggestion
+from app.models.code_health import CodeScan, CodeIssue
+from app.models.project import Project, ProjectMember
+from app.models.monthly_champion import MonthlyChampion # Import all models here
 from app.core.config import settings
 
 config = context.config

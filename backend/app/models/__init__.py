@@ -5,3 +5,6 @@ from .document import Document, DocumentVersion
 from .conversation import Conversation
 from .personality_mode import PersonalityMode
 from .budget import DepartmentBudget, ApiUsage
+
+from .project import Project, ProjectMember
+from .monthly_champion import MonthlyChampion

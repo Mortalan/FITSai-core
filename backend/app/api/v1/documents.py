@@ -84,3 +84,41 @@ async def get_doc(doc_id: int, db: AsyncSession = Depends(get_db)):
     doc = result.scalar_one_or_none()
     if not doc: raise HTTPException(status_code=404, detail="Document not found")
     return {"id": doc.id, "title": doc.title, "content": content}
+
+@router.post("/{doc_id}/analyze")
+async def analyze_doc(
+    doc_id: int,
+    mode: str = "summarize",
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    content = await document_service.get_document_content(db, doc_id)
+    result = await db.execute(select(Document).where(Document.id == doc_id))
+    doc = result.scalar_one()
+    
+    from app.services.document_analysis import document_analysis
+    analysis = await document_analysis.analyze_document(content, doc.title, mode, user.id)
+    return {"analysis": analysis}
+
+@router.post("/{doc_id}/convert")
+async def convert_doc(
+    doc_id: int,
+    target_format: str = "pdf",
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    content = await document_service.get_document_content(db, doc_id)
+    result = await db.execute(select(Document).where(Document.id == doc_id))
+    doc = result.scalar_one()
+    
+    # Save content to temp file for conversion
+    with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+        from docx import Document as NewDocx
+        d = NewDocx(); d.add_paragraph(content); d.save(tmp.name)
+        
+        from app.services.document_conversion import document_conversion
+        pdf_path = document_conversion.convert_to_pdf(tmp.name, user.id)
+        os.unlink(tmp.name)
+        
+    if not pdf_path: raise HTTPException(500, "Conversion failed")
+    return FileResponse(path=pdf_path, filename=f"{doc.title}.pdf")

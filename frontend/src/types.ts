@@ -1,5 +1,7 @@
 export type MessageRole = 'user' | 'assistant' | 'system';
 
+export type AppView = 'chat' | 'workspace';
+
 export interface ToolCall {
   id: string;
   name: string;
@@ -24,6 +26,12 @@ export interface User {
   name: string;
   character_class: string;
   xp_total: number;
+  character_level: number;
+  is_superuser: boolean;
+  active_personality_id?: number | null;
+  special_effects?: any;
+  stats?: any;
+  login_streak: number;
   department_id?: number | null;
   department?: Department | null;
 }
@@ -34,6 +42,7 @@ export interface Message {
   content: string;
   status?: string;
   toolCalls?: ToolCall[];
+  sources?: string[];
 }
 
 export interface ChatState {

@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { User, ShieldAlert, Palette, Lock, CheckCircle2, DollarSign, Users, BarChart3, Clock, FileText, Award, Trophy, Bell } from 'lucide-react';
+import { User, ShieldAlert, Palette, DollarSign, Users, FileText, Award, Trophy, Bell, Edit2, Save, Smile } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { GodMode } from './GodMode';
 import { DocumentLibrary } from './Documents';
 import { Achievements } from './Achievements';
 import { Leaderboard } from './Leaderboard';
 import { Reminders } from './Reminders';
+import { Avatar } from './Avatar';
+import { ProgressDashboard } from './ProgressDashboard';
+import { Collaboration } from './Collaboration';
 import { listPersonalities, updateProfile } from '../api';
 import axios from 'axios';
+import { Lock, CheckCircle2 } from 'lucide-react';
 
 export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'profile' }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const user = useAuthStore((state) => state.user);
-  const token = useAuthStore((state) => state.token);
   const updateUser = useAuthStore((state) => state.updateUser);
   
   const [personalities, setPersonalities] = useState<any[]>([]);
-  const [budgets, setBudgets] = useState<any[]>([]);
-  const [usage, setUsage] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    avatar_emoji: user?.special_effects?.emoji || '🤖',
+    avatar_color: user?.special_effects?.color || '#3b82f6'
+  });
 
   useEffect(() => {
     if (activeTab === 'personalities') {
@@ -32,25 +39,27 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
         })
         .finally(() => setLoading(false));
     }
-    if (activeTab === 'budget' && token) {
-      setLoading(true);
-      Promise.all([
-        axios.get('http://10.0.0.231:9000/api/v1/admin/stats', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://10.0.0.231:9000/api/v1/admin/budgets', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://10.0.0.231:9000/api/v1/admin/usage', { headers: { Authorization: `Bearer ${token}` } })
-      ]).then(([s, b, u]) => {
-        setStats(s.data);
-        setBudgets(b.data);
-        setUsage(u.data);
-      }).finally(() => setLoading(false));
+  }, [activeTab]);
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await updateProfile(profileForm);
+      updateUser(res.user);
+      setSaveStatus('Profile updated!');
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (err) {
+      alert('Failed to update profile');
     }
-  }, [activeTab, token]);
+    setLoading(false);
+  };
 
   const handlePersonalitySelect = async (id: number) => {
     setLoading(true);
     try {
-      await updateProfile({ active_personality_id: id });
-      updateUser({ active_personality_id: id });
+      const res = await updateProfile({ active_personality_id: id });
+      updateUser(res.user);
       setSaveStatus('Personality updated!');
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err) {}
@@ -59,22 +68,22 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
 
   const menuSections = [
     {
-      title: "Personal",
+      title: "Identity",
       items: [
-        { id: 'profile', name: 'Profile', icon: User },
+        { id: 'profile', name: 'Profile Editor', icon: User },
         { id: 'personalities', name: 'Character Voice', icon: Palette },
-        { id: 'reminders', name: 'Reminders', icon: Bell },
       ]
     },
     {
-      title: "Company",
+      title: "Operations",
       items: [
         { id: 'docs', name: 'Knowledge Base', icon: FileText },
-        { id: 'collaboration', name: 'Collaboration', icon: Users },
+        { id: 'reminders', name: 'Task Reminders', icon: Bell },
+        { id: 'collaboration', name: 'Project Team', icon: Users },
       ]
     },
     {
-      title: "Gamification",
+      title: "Progression",
       items: [
         { id: 'achievements', name: 'Achievements', icon: Award },
         { id: 'leaderboard', name: 'Leaderboard', icon: Trophy },
@@ -84,9 +93,8 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
 
   if (user?.is_superuser || user?.email === 'louisp@fits.net.za') {
     menuSections.push({
-      title: "Admin",
+      title: "Control",
       items: [
-        { id: 'budget', name: 'Budget Control', icon: DollarSign },
         { id: 'admin', name: 'God Mode', icon: ShieldAlert },
       ]
     });
@@ -94,11 +102,10 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
 
   return (
     <div className="flex h-full font-sans">
-      {/* Workspace Sidebar */}
       <div className="w-64 bg-[var(--sidebar)] border-r border-[var(--border)] p-6 overflow-y-auto custom-scrollbar">
         <div className="mb-8">
           <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Workspace</h2>
-          <p className="text-gray-500 font-medium uppercase text-[10px] tracking-widest mt-1">Hub & Settings</p>
+          <p className="text-gray-500 font-medium uppercase text-[10px] tracking-widest mt-1">Tools & Progression</p>
         </div>
 
         <div className="space-y-6">
@@ -126,33 +133,72 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
         </div>
       </div>
 
-      {/* Content Area */}
       <div className="flex-1 bg-[var(--background)] overflow-y-auto custom-scrollbar">
         {activeTab === 'docs' && <DocumentLibrary />}
         {activeTab === 'achievements' && <Achievements />}
         {activeTab === 'leaderboard' && <Leaderboard />}
         {activeTab === 'reminders' && <Reminders />}
-        {activeTab === 'admin' && <div className="p-8"><GodMode /></div>}
+        {activeTab === 'collaboration' && <div className="p-8 max-w-5xl mx-auto"><Collaboration /></div>}
+        {activeTab === 'admin' && <div className="p-8 max-w-6xl mx-auto"><GodMode /></div>}
         
-        {/* Settings Content */}
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="p-8 max-w-5xl mx-auto space-y-8">
           {activeTab === 'profile' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 bg-[var(--sidebar)] border border-[var(--border)] rounded-3xl p-8 shadow-sm">
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 rounded-full bg-[var(--accent)] flex items-center justify-center text-4xl font-bold text-[var(--accent-foreground)] shadow-xl">
-                  {user?.name?.[0]}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">{user?.name}</h2>
-                  <p className="text-gray-500 font-medium">{user?.email}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold uppercase rounded-md border border-[var(--accent)]/20">
-                      {user?.character_class} (Lvl {user?.character_level})
-                    </span>
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              <ProgressDashboard />
+
+              <div className="bg-[var(--sidebar)] border border-[var(--border)] rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-6">
+                    <Avatar size={80} />
+                    <div>
+                      <h2 className="text-2xl font-bold">{user?.name}</h2>
+                      <p className="text-gray-500 font-medium">{user?.email}</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold uppercase rounded-md border border-[var(--accent)]/20">
+                          {user?.character_class}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+                  {saveStatus && <span className="text-green-500 text-xs font-bold animate-pulse">{saveStatus}</span>}
                 </div>
+
+                <form onSubmit={handleProfileSave} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Display Name</label>
+                      <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Email Address</label>
+                      <input type="email" value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Avatar Appearance</h4>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1 flex items-center gap-2"><Smile size={12} /> Icon Emoji</label>
+                        <input type="text" placeholder="e.g. 🤖" value={profileForm.avatar_emoji} onChange={e => setProfileForm({...profileForm, avatar_emoji: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all text-center text-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1 flex items-center gap-2"><Palette size={12} /> Aura Color</label>
+                        <div className="flex gap-3">
+                          <input type="color" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="h-12 w-20 bg-transparent border-none outline-none cursor-pointer" />
+                          <input type="text" value={profileForm.avatar_color} onChange={e => setProfileForm({...profileForm, avatar_color: e.target.value})} className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl py-3 px-4 text-xs font-mono" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-[var(--border)] flex justify-end">
+                    <button type="submit" disabled={loading} className="flex items-center gap-2 bg-[var(--accent)] text-[var(--accent-foreground)] px-6 py-2.5 rounded-xl font-bold shadow-lg hover:opacity-90 transition-all disabled:opacity-50">
+                      <Save size={18} /> Update Profile
+                    </button>
+                  </div>
+                </form>
               </div>
-              <p className="text-sm text-gray-400">Use the sidebar to navigate your workspace and customize your experience.</p>
             </div>
           )}
 
@@ -194,87 +240,6 @@ export const Workspace: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'pro
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'collaboration' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 bg-[var(--sidebar)] border border-[var(--border)] rounded-3xl p-8 shadow-sm">
-              <h3 className="font-bold text-xl">Collaboration & Peer Linking</h3>
-              <p className="text-sm text-gray-500">Connect with colleagues who have solved similar technical issues.</p>
-              
-              <div className="bg-blue-500/5 border border-blue-500/20 p-6 rounded-2xl">
-                <h4 className="font-bold text-blue-600 mb-2">How it works</h4>
-                <p className="text-xs text-blue-700 leading-relaxed">
-                  Momo automatically analyzes Knowledge Base contributions and technical discussions. 
-                  When you ask a complex question, she'll suggest reaching out to specific peers who have 
-                  demonstrated expertise in that domain.
-                </p>
-              </div>
-
-              <div className="grid gap-4 pt-4">
-                <div className="flex items-center justify-between p-4 bg-[var(--input-bg)]/50 rounded-2xl border border-[var(--border)]">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-500/10 text-green-600 flex items-center justify-center font-bold">L</div>
-                    <div>
-                      <span className="text-sm font-bold">Louis (Admin)</span>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase">Expert: Infrastructure, Security</p>
-                    </div>
-                  </div>
-                  <CheckCircle2 size={16} className="text-green-500" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'budget' && (
-             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 bg-[var(--sidebar)] border border-[var(--border)] rounded-3xl p-8 shadow-sm">
-              <h3 className="font-bold text-xl">Budget & Usage Control</h3>
-              {loading ? <div className="animate-pulse h-20 bg-gray-100 rounded-2xl" /> : (
-                <>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="p-6 bg-[var(--input-bg)] rounded-3xl border border-[var(--border)]">
-                      <BarChart3 size={20} className="text-blue-500 mb-2" />
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">Total API Spend</span>
-                      <p className="text-2xl font-bold">${stats?.total_api_spend?.toFixed(2)}</p>
-                    </div>
-                    <div className="p-6 bg-[var(--input-bg)] rounded-3xl border border-[var(--border)]">
-                      <Users size={20} className="text-green-500 mb-2" />
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">Active Users</span>
-                      <p className="text-2xl font-bold">{stats?.users}</p>
-                    </div>
-                    <div className="p-6 bg-[var(--input-bg)] rounded-3xl border border-[var(--border)]">
-                      <Clock size={20} className="text-purple-500 mb-2" />
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">Monthly Refresh</span>
-                      <p className="text-2xl font-bold">25 Days</p>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold uppercase tracking-widest text-gray-400">Department Budgets</h4>
-                    <div className="border border-[var(--border)] rounded-2xl overflow-hidden">
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-[var(--input-bg)]">
-                          <tr>
-                            <th className="p-4 font-bold">Department</th>
-                            <th className="p-4 font-bold">Limit (USD)</th>
-                            <th className="p-4 font-bold">Current Spend</th>
-                            <th className="p-4 font-bold">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--border)]">
-                          {budgets.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-gray-400">No budget limits configured.</td></tr> : budgets.map(b => (
-                            <tr key={b.id}>
-                              <td className="p-4 font-medium">{b.department_id}</td>
-                              <td className="p-4">${b.monthly_limit}</td>
-                              <td className="p-4">${b.current_spend.toFixed(4)}</td>
-                              <td className="p-4"><span className="px-2 py-0.5 bg-green-500/10 text-green-600 text-[10px] font-bold rounded-full">HEALTHY</span></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </>
               )}
             </div>
           )}

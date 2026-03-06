@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { MessageSquare, Plus, LogOut, Search, X, LayoutGrid } from 'lucide-react';
+import { MessageSquare, Plus, LogOut, Search, X, LayoutGrid, Zap } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import { ProgressDashboard } from './ProgressDashboard';
 import { Avatar } from './Avatar';
 import { getChatHistory } from '../api';
-import type { AppView } from '../App';
+import type { AppView } from '../types';
 import type { Department } from '../types';
 
 interface LayoutProps {
@@ -46,6 +45,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
     return history.filter(h => h.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [history, searchQuery]);
 
+  // Calculate XP Progress for Header
+  const progress = useMemo(() => {
+    if (!user) return 0;
+    const currentLevelXP = Math.pow(user.character_level - 1, 2) * 100;
+    const nextLevelXP = Math.pow(user.character_level, 2) * 100;
+    return user.character_level === 50 ? 100 : ((user.xp_total - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+  }, [user]);
+
   return (
     <div className="flex h-screen bg-[var(--background)] text-[var(--foreground)] font-sans">
       <aside className="w-64 bg-[var(--sidebar)] flex flex-col p-4 border-r border-[var(--border)]">
@@ -63,16 +70,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
 
         <button 
           onClick={onNewChat}
-          className="flex items-center gap-2 bg-[var(--input-bg)] p-3 rounded-full mb-6 hover:opacity-80 transition-opacity border border-[var(--border)]"
+          className="flex items-center gap-2 bg-[var(--input-bg)] p-3 rounded-full mb-6 hover:opacity-80 transition-opacity border border-[var(--border)] shadow-sm"
         >
           <Plus size={20} className="text-[var(--accent)]" />
           <span className="text-sm font-bold">New Chat</span>
         </button>
         
-        <div className="mb-6">
-          <ProgressDashboard />
-        </div>
-
         <nav className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar pr-1">
           <div 
             onClick={() => onViewChange('chat')}
@@ -82,7 +85,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
             <span className="text-sm font-semibold">Active Chat</span>
           </div>
           
-          <div className="py-2 px-3 space-y-3">
+          <div className="py-4 px-3 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Recent History</p>
               {searchQuery && <X size={12} className="text-gray-400 cursor-pointer" onClick={() => setSearchQuery('')} />}
@@ -100,7 +103,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
             </div>
 
             <div className="space-y-1">
-              {filteredHistory.slice(0, 10).map(chat => (
+              {filteredHistory.slice(0, 15).map(chat => (
                 <div 
                   key={chat.id}
                   onClick={() => onChatSelect(chat.id)}
@@ -115,13 +118,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
         </nav>
 
         <div className="mt-auto space-y-1 pt-4 border-t border-[var(--border)]">
-          {/* Replaced Settings with Workspace Hub */}
           <div 
             onClick={() => onViewChange('workspace')}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'workspace' || currentView === 'settings' || currentView === 'docs' || currentView === 'achievements' || currentView === 'leaderboard' || currentView === 'reminders' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
+            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${currentView === 'workspace' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-[var(--input-bg)]'}`}
           >
             <LayoutGrid size={18} />
-            <span className="text-sm font-semibold">Workspace</span>
+            <span className="text-sm font-semibold">Workspace Hub</span>
           </div>
           
           <div 
@@ -135,16 +137,36 @@ export const Layout: React.FC<LayoutProps> = ({ children, onViewChange, currentV
       </aside>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--border)]">
+        <header className="h-16 flex items-center justify-between px-6 border-b border-[var(--border)] bg-white/50 dark:bg-black/20 backdrop-blur-md z-10">
           <div className="flex items-center gap-2">
              <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-               {dept?.branding?.custom_greeting || 'FITSai-Core v1.9.9'} • {currentView === 'chat' ? 'CHAT' : 'WORKSPACE'}
+               {dept?.branding?.custom_greeting || 'Momo v2.0.5'} • {currentView.toUpperCase()}
              </span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-bold">{user?.name || 'User'}</span>
-            <div className="w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center text-[var(--accent-foreground)] text-xs font-bold">
-              {user?.name?.[0] || 'U'}
+          
+          <div className="flex items-center gap-6">
+            {/* Header XP Block next to name */}
+            {user && (
+              <div className="flex items-center gap-3 px-4 py-1.5 bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm">
+                <div className="flex flex-col items-end">
+                  <span className="text-[9px] font-bold text-[var(--accent)] uppercase tracking-tighter">{user.character_class}</span>
+                  <span className="text-[10px] font-bold text-[var(--foreground)] uppercase tracking-widest">Lvl {user.character_level}</span>
+                </div>
+                <div className="w-24 h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-[var(--accent)] transition-all duration-1000" style={{ width: `${progress}%` }} />
+                </div>
+                <Zap size={14} className="text-yellow-500 fill-yellow-500 animate-pulse" />
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end">
+                <span className="text-sm font-bold">{user?.name || 'User'}</span>
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{user?.is_superuser ? 'Admin' : 'Technician'}</span>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center text-[var(--accent-foreground)] text-xs font-bold shadow-md">
+                {user?.name?.[0] || 'U'}
+              </div>
             </div>
           </div>
         </header>

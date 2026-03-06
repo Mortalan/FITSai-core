@@ -13,6 +13,11 @@ from app.api.v1.admin import router as admin_router
 from app.api.v1.voice import router as voice_router
 from app.api.v1.reminders import router as reminders_router
 from app.api.v1.templates import router as templates_router
+from app.api.v1.roadmap import router as roadmap_router
+from app.api.v1.suggestions import router as suggestions_router
+from app.api.v1.code_health import router as code_health_router
+from app.api.v1.projects import router as projects_router
+from app.api.v1.meetings import router as meetings_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -44,6 +49,11 @@ app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(voice_router, prefix="/api/v1/voice", tags=["voice"])
 app.include_router(reminders_router, prefix="/api/v1/reminders", tags=["reminders"])
 app.include_router(templates_router, prefix="/api/v1/templates", tags=["templates"])
+app.include_router(roadmap_router, prefix="/api/v1/roadmap", tags=["roadmap"])
+app.include_router(suggestions_router, prefix="/api/v1/suggestions", tags=["suggestions"])
+app.include_router(code_health_router, prefix="/api/v1/code-health", tags=["code-health"])
+app.include_router(projects_router, prefix="/api/v1/projects", tags=["projects"])
+app.include_router(meetings_router, prefix="/api/v1/meetings", tags=["meetings"])
 
 @app.get("/")
 async def root():
