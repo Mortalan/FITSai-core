@@ -59,15 +59,15 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
 
   return (
     <div className="flex h-full font-sans bg-[var(--background)] animate-in fade-in duration-700">
-      <div className="w-72 bg-[var(--sidebar)] border-r border-[var(--border)] p-8 overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.5</p></div>
+      <div className="w-72 flex-shrink-0 bg-[var(--sidebar)] border-r border-[var(--border)] p-8 overflow-y-auto custom-scrollbar flex flex-col">
+        <div className="mb-10"><h2 className="text-2xl font-black tracking-tighter text-[var(--foreground)]">Workspace</h2><p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mt-1">Momo Core v2.1.6</p></div>
         <div className="space-y-8">
           {menuSections.map((section, idx) => (
             <div key={idx}>
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4 px-2">{section.title}</h3>
               <div className="space-y-1">
                 {section.items.map((tab) => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all font-bold text-sm ${activeTab === tab.id ? 'bg-[var(--accent)] text-white shadow-lg' : 'text-gray-500 hover:bg-[var(--input-bg)]'}`}>
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all font-bold text-sm ${activeTab === tab.id ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20' : 'text-gray-500 hover:bg-[var(--input-bg)]'}`}>
                     <div className="flex items-center gap-3"><tab.icon size={18} /><span className="whitespace-nowrap">{tab.name}</span></div>
                     <ChevronRight size={14} className={activeTab === tab.id ? 'opacity-100' : 'opacity-0'} />
                   </button>
@@ -85,14 +85,7 @@ export const Workspace: React.FC<{ defaultTab?: string, onInitProjectChat: (pid:
               <ProgressDashboard />
               <div className="bg-[var(--sidebar)] border border-[var(--border)] rounded-[40px] p-10 shadow-sm">
                 <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-8">
-                    <Avatar size={120} />
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3"><h2 className="text-4xl font-black tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div>
-                      <p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p>
-                      <p className="text-sm text-gray-500 font-medium">{user?.email}</p>
-                    </div>
-                  </div>
+                  <div className="flex items-center gap-8"><Avatar size={120} /><div className="space-y-2"><div className="flex items-center gap-3"><h2 className="text-4xl font-black tracking-tighter">{user?.name}</h2>{user?.is_superuser && <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/20">System Admin</span>}</div><p className="text-lg font-bold text-[var(--accent)]">{user?.equipped_title || 'Novice Technician'}</p><p className="text-sm text-gray-500 font-medium">{user?.email}</p></div></div>
                   {saveStatus && <span className="text-green-500 text-xs font-black uppercase tracking-widest animate-bounce">{saveStatus}</span>}
                 </div>
                 <form onSubmit={handleProfileUpdate} className="space-y-8">
